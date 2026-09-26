@@ -41,6 +41,39 @@ describe('solidAt', () => {
     }
   });
 
+  it('rests every part on something when the view is assembled', () => {
+    const preset = findPreset('rig-2019');
+    if (preset === undefined)
+      throw new Error('missing preset rig-2019');
+
+    const layout = boardLayout(preset.config);
+    const cpuTop = solidAt(part('cpu'), 0).topMm;
+
+    // Nothing hovers. A part stands on the board, except a cache plate, which
+    // stands on the package it is part of.
+    for (const candidate of layout.parts) {
+      const expected = candidate.kind === 'cache' ? cpuTop : 0;
+      expect(solidAt(candidate, 0).bottomMm, candidate.id).toBe(expected);
+    }
+  });
+
+  it('lifts everything once exploded, except the package it all rises from', () => {
+    const preset = findPreset('rig-2019');
+    if (preset === undefined)
+      throw new Error('missing preset rig-2019');
+
+    for (const candidate of boardLayout(preset.config).parts) {
+      const assembled = solidAt(candidate, 0).bottomMm;
+      const exploded = solidAt(candidate, 1).bottomMm;
+      if (candidate.id === 'cpu') {
+        // The package is the reference the caches rise from, so it stays put.
+        expect(exploded, candidate.id).toBe(assembled);
+        continue;
+      }
+      expect(exploded, candidate.id).toBeGreaterThan(assembled);
+    }
+  });
+
   it('clamps an explode position outside the slider range', () => {
     expect(solidAt(part('gpu'), -1)).toEqual(solidAt(part('gpu'), 0));
     expect(solidAt(part('gpu'), 3)).toEqual(solidAt(part('gpu'), 1));

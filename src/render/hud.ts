@@ -106,7 +106,9 @@ export function drawHudFooter(
       context,
       data.explode >= 1
         ? 'Fully exploded: the parts are laid out in the order the data reaches them.'
-        : 'Slide Explode to 0 to assemble the parts onto the board, or to 100% to separate them.',
+        : data.explode <= 0
+          ? 'Assembled on the board. Slide Explode to pull the parts apart and see what is wired to what.'
+          : 'Slide Explode to 0 to assemble the parts onto the board, or to 100% to separate them.',
       room,
     ),
     HUD_PADDING_X,

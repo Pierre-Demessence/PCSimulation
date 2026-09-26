@@ -45,7 +45,9 @@ const view = new PipelineView(pipelineCanvas);
 let panel: ControlPanel | null = null;
 
 let state: PanelState = {
-  explode: 1,
+  // Assembled by default: the board opens as a board, with Explode as the tool
+  // that pulls it apart, not as the state you are dropped into.
+  explode: 0,
   isolating: { casLatency: 16, mtPerSecond: 3200 },
   nsPerSecond: 40,
   playing: true,
