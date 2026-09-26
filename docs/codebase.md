@@ -9,7 +9,11 @@
   - `index.ts` — the public surface of the core.
 - `src/workloads/` — seeded access-stream generation (`rng.ts`, `generate.ts`).
 - `src/data/` — rig presets and the motherboard's compatibility rules.
-- `src/main.ts` — entry point; currently a plain results readout.
+- `src/render/` — Canvas 2D flow view (`pipeline.ts`) and the pure formatting
+  and scale helpers it shares with the panel (`format.ts`).
+- `src/ui/` — the control panel and the readout cards (`panel.ts`).
+- `src/main.ts` — wiring: state, re-simulation on change, and the animation loop.
+- `src/styles.css` — the page and panel styling.
 - `index.html` — Vite HTML entry; `%APP_NAME%` is replaced from `brand.json`.
 - `vite.config.ts` / `vitest.config.ts` — build and test config; both share the `@/` alias.
 - `eslint.config.ts` — flat ESLint config.
@@ -19,8 +23,6 @@
 
 See [roadmap.md](roadmap.md). Not yet written:
 
-- `src/render/` — Canvas 2D flow visualizer.
-- `src/ui/` — DOM/SVG panels, sliders, charts, tooltips.
 - `src/worker/` — headless batch comparison off the main thread.
 
 ## Conventions

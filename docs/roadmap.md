@@ -6,12 +6,10 @@ memory path only (CPU + RAM + motherboard).
 
 ## Where we are
 
-v0.1's simulation core is built and tested: the discrete-event memory path, the
-three workload profiles, the three rig presets and the bottleneck classifier
-all work, and lint, tests and build are green. What remains before v0.1 is done
-is the presentation layer — the flow visualizer, the comparison UI with
-isolating sliders, and worker-backed batch runs. See the
-[v0.1 plan](plans/pc-simulation.md).
+v0.1's simulation core and its presentation layer are built: the discrete-event
+memory path, the workload profiles, the rig presets, the bottleneck classifier,
+and the animated data-path view with its isolating controls. Lint, tests and
+build are green. See the [v0.1 plan](plans/pc-simulation.md).
 
 ## Component waves
 
@@ -46,6 +44,14 @@ Recorded here so they are not lost when the v0.1 plan is archived.
 
 - PCIe lane splitting: filling M.2 slots drops the GPU to ×8 (v0.2).
 - Chipset uplink (DMI) saturation when many chipset devices are active (v0.3).
+
+## Deferred presentation work
+
+- The delta against the previous run in the readout.
+- Headless batch comparison in a Web Worker, so a slider change never waits.
+- Precomputing the per-frame labels instead of formatting them every frame.
+- Per-level MSHRs and a real prefetcher, which would let the cache rows show
+  contention for miss slots rather than a single generous limit.
 
 ## Non-goals
 

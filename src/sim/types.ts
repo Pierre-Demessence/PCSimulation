@@ -83,6 +83,24 @@ export interface OutstandingStats {
 
 export type BottleneckClass = 'latency-bound' | 'resource-bound';
 
+/**
+ * What one request was doing, over a span of simulated time.
+ *
+ * - `level` — resident at a cache level: probing, then holding a miss slot while
+ *   the line is fetched. One span covers the whole residency, so counting the
+ *   spans that contain an instant gives a true "in flight" figure.
+ * - `transfer` — the memory channel: queued behind another transfer, or moving.
+ * - `dram` — waiting for the DRAM itself, with the bus idle.
+ * - `fill` — the line travelling back up into the cache.
+ */
+export interface SimSpan {
+  readonly requestIndex: number;
+  readonly level: LevelId;
+  readonly kind: 'dram' | 'fill' | 'level' | 'transfer';
+  readonly startNs: number;
+  readonly endNs: number;
+}
+
 export interface SimResult {
   readonly elapsedNs: number;
   readonly accesses: number;
@@ -97,4 +115,6 @@ export interface SimResult {
   readonly resources: readonly ResourceStats[];
   readonly classification: BottleneckClass;
   readonly bottleneckId: LevelId | null;
+  /** Activity for the first `traceRequests` accesses, or empty when untraced. */
+  readonly spans: readonly SimSpan[];
 }

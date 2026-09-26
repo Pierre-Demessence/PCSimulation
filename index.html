@@ -6,7 +6,21 @@
     <title>%APP_NAME%</title>
   </head>
   <body>
-    <div id="app"></div>
+    <main class="app">
+      <h1>%APP_NAME%</h1>
+      <p class="lede">
+        One workload, the same parts, with a single component changed at a time.
+        Watch where the time actually goes, and where it stops mattering.
+      </p>
+      <div id="panel"></div>
+      <canvas
+        id="pipeline"
+        role="img"
+        aria-label="Animated view of the memory data path: the CPU, three cache levels and the memory bus, showing how busy each level is and where requests are waiting."
+      >
+        The animated data path needs canvas support. The readout above still reports every number.
+      </canvas>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

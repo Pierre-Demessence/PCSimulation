@@ -93,9 +93,11 @@ leaving the CPU side as the limiter.
 - **Fidelity target is F2** (individual transactions you can watch), with F3
   realism knobs explicitly out of v0.1 scope. Fidelity levels are `F0–F3`;
   `L1/L2/L3` always means cache levels, never fidelity.
-- **Time presentation uses a labelled logarithmic axis plus a dilation
-  control.** Linear animation makes a 1 ns cache hit invisible next to a
-  100 ns DRAM miss; the axis must never silently lie about magnitudes.
+- **Time presentation uses a constant, labelled dilation plus log-scaled
+  accumulator bars.** A logarithmic *time* axis is rejected: it would decouple a
+  packet's on-screen speed from its real duration, which is the one quantity the
+  view exists to show. Logs are confined to the accumulator bars, where they are
+  labelled as such.
 - **Render split:** DOM/SVG for panels, sliders and charts (accessible,
   themable, tooltip-friendly); Canvas 2D only for the animated flow.
 
@@ -221,11 +223,16 @@ transferables are needed; a run is cancelled by terminating the worker.
 
 The central presentation trap. A linear animated clock makes fast levels
 invisible: L1 is ~100× faster than DRAM, an HDD seek is ~80,000× slower than
-DRAM and ~8,000,000× slower than an L1 hit. Mitigations, all required:
+DRAM and ~8,000,000× slower than an L1 hit. Two mitigations ship:
 
-- a **dilation control** ("1 real second = 1 ns of simulated time"),
-- a **logarithmic time axis**, visibly labelled,
-- **accumulator meters** so tiny per-access costs still show as growing bars.
+- a **dilation control**, labelled on screen as "1 real second = N simulated",
+- **accumulator meters**, log-scaled and marked `(log)`, so per-level busy
+  times spanning orders of magnitude stay visible.
+
+A **logarithmic time axis is deliberately rejected.** Under one, a packet's
+speed on screen would no longer match its duration — and duration is precisely
+what the view exists to show. Constant dilation keeps every animation truthful;
+logs are confined to the accumulator bars, where they are labelled.
 
 ### Data model
 
@@ -326,10 +333,11 @@ but nearer the chase — 1.3 GB/s, roughly twice the pointer chase and far short
 of streaming's 89.5 GB/s. See [../roadmap.md](../roadmap.md) for out-of-order
 issue.
 
-Starting magnitudes for v0.1: 1,000,000 accesses; streaming working set
-≥ 256 MiB with a forward stride of one cache line; random working set
-≥ 256 MiB with scattered line addresses and dependent requests; mixed a 50/50
-blend. All read-only unless a profile says otherwise.
+Starting magnitudes: 200,000 accesses per run, which is what the app uses so a
+slider change settles quickly — the generator's own default is 1,000,000.
+Streaming working set ≥ 256 MiB with a forward stride of one cache line; random
+working set ≥ 256 MiB with scattered line addresses and dependent requests;
+mixed a 50/50 blend. All read-only unless a profile says otherwise.
 
 ### Presets (v0.1)
 
@@ -385,8 +393,8 @@ GPU, display, storage and PSU are tracked in [../roadmap.md](../roadmap.md).
 
 - **The workload library is the long pole.** Each part needs a workload that
   stresses it, or the demo teaches nothing. Budget for content, not just core.
-- **Time-scale legibility.** Mitigated by log axis + dilation + accumulators;
-  validate with a real user early.
+- **Time-scale legibility.** Mitigated by the labelled constant dilation and
+  the log-scaled accumulator bars; validate with a real user early.
 - **Scope creep toward real simulators.** Every realism knob must be opt-in
   and off by default.
 
@@ -407,18 +415,20 @@ GPU, display, storage and PSU are tracked in [../roadmap.md](../roadmap.md).
 - [x] Verify acceptance criteria 1, 3 and 4 as unit tests, and record the
       measured results above.
 - [x] `npm run lint` + `npm test` + `npm run build`.
-- [ ] Build the DOM/SVG UI: preset picker, isolating sliders, metric cards
-      with units and tooltips, and the delta against the previous run.
-- [ ] Satisfy acceptance criterion 2: an isolating slider moves the bottleneck
-      highlight.
-- [ ] Build the Canvas 2D flow visualizer with queue buildup and a
-      bottleneck highlight using redundant cues.
-- [ ] Implement the time-scale control (dilation + labelled log axis) and
-      accumulator meters.
+- [x] Build the control panel: rig and workload pickers, the two isolating
+      sliders, and metric cards carrying units and tooltips.
+- [x] Satisfy acceptance criterion 2: raising memory speed on a streaming
+      workload moves the limiter from the memory bus to the L3 cache.
+- [x] Build the Canvas 2D flow view: per-level utilisation, a log accumulator,
+      live in-flight glyphs per phase, and the saturated resource tagged by
+      colour, hatch density and the word BOTTLENECK.
+- [x] Implement the time-scale control: a labelled constant dilation plus
+      log-scaled accumulator meters.
+- [x] E2E check in the browser against Pierre's running dev server.
+- [ ] Show the delta against the previous run in the readout.
 - [ ] Implement headless batch comparison in a Web Worker.
-- [ ] E2E check in the browser against Pierre's running dev server.
-- [ ] Peer review (subagent, no edits, no `vscode_askQuestions`), fix
-      findings, re-review until LGTM.
+- [x] Peer review (subagent, no edits, no `vscode_askQuestions`), fix findings,
+      re-review until LGTM.
 - [ ] Move this plan to `docs/plans/done/` as part of the final commit.
 
 ## Shape notes

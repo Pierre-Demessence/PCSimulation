@@ -7,6 +7,7 @@ import type {
   ResourceRole,
   ResourceStats,
   SimResult,
+  SimSpan,
 } from './types';
 import { SetAssociativeCache } from './cache';
 import { EventQueue } from './event-queue';
@@ -26,6 +27,11 @@ export interface WorkloadAccess {
 export interface SimulateOptions {
   readonly lineBytes?: number;
   readonly saturationThreshold?: number;
+  /**
+   * Records per-request spans for the first N accesses so the view can replay
+   * real activity. Off by default: a trace for a million accesses is waste.
+   */
+  readonly traceRequests?: number;
 }
 
 const LEVELS = ['l1', 'l2', 'l3'] as const;
@@ -35,12 +41,18 @@ type OutstandingLevel = CacheLevel | 'memory';
 const RESOURCE_IDS: readonly LevelId[] = ['cpu', 'l1', 'l2', 'l3', 'memory'];
 const OUTSTANDING_LEVELS: readonly OutstandingLevel[] = ['l1', 'l2', 'l3', 'memory'];
 
+interface PathEntry {
+  readonly level: CacheLevel;
+  /** When the request began probing this level; its residency starts there. */
+  readonly waitStartNs: number;
+}
+
 interface Request {
   readonly index: number;
   readonly access: WorkloadAccess;
   readonly issuedAtNs: number;
   /** Levels that missed, in order; the data fills each of them on return. */
-  readonly path: CacheLevel[];
+  readonly path: PathEntry[];
 }
 
 interface Waiter {
@@ -71,6 +83,8 @@ export class MemorySystemSimulation {
   private readonly accesses: readonly WorkloadAccess[];
   private readonly lineBytes: number;
   private readonly saturationThreshold: number;
+  private readonly traceLimit: number;
+  private readonly spans: SimSpan[] = [];
   private readonly caches: Record<CacheLevel, SetAssociativeCache>;
   private readonly queue = new EventQueue<() => void>();
 
@@ -108,6 +122,7 @@ export class MemorySystemSimulation {
     this.accesses = accesses;
     this.lineBytes = options.lineBytes ?? DEFAULT_LINE_BYTES;
     this.saturationThreshold = options.saturationThreshold ?? DEFAULT_SATURATION_THRESHOLD;
+    this.traceLimit = Math.max(0, options.traceRequests ?? 0);
     this.caches = {
       l1: this.buildCache(config.caches.l1),
       l2: this.buildCache(config.caches.l2),
@@ -226,7 +241,9 @@ export class MemorySystemSimulation {
     if (cache.lookup(request.access.address)) {
       this.accessCount[level] += 1;
       this.hitCount[level] += 1;
-      this.complete(request, this.reservePort(level, request.access.bytes, probedAtNs));
+      const servedAtNs = this.reservePort(level, request.access.bytes, probedAtNs);
+      this.recordSpan(request, level, 'level', atNs, servedAtNs);
+      this.complete(request, servedAtNs);
       return;
     }
 
@@ -248,7 +265,7 @@ export class MemorySystemSimulation {
 
     this.accessCount[level] += 1;
     this.setOutstanding(level, this.outstanding[level] + 1);
-    request.path.push(level);
+    request.path.push({ level, waitStartNs: atNs });
     this.inFlightLines[level].set(request.access.address, []);
     this.accessLevel(request, levelIndex + 1, probedAtNs);
   }
@@ -271,10 +288,16 @@ export class MemorySystemSimulation {
     this.accessCount.memory += 1;
     this.busyNs.memory += serviceNs;
     this.movedBytes += request.access.bytes;
+    // Starts at arrival, not at grant, so the span covers any time spent queued
+    // behind another transfer: the row's occupancy count must be exact.
+    this.recordSpan(request, 'memory', 'transfer', atNs, wiredAtNs);
 
     // The channel is occupied for the transfer; the DRAM access latency runs
-    // alongside other transfers, standing in for bank-level parallelism.
+    // alongside other transfers, standing in for bank-level parallelism. Both
+    // phases are traced: the wait is what a latency-bound workload spends its
+    // whole life in, and leaving it out makes the picture look idle.
     const readyAtNs = wiredAtNs + fullAccessNs(spec);
+    this.recordSpan(request, 'memory', 'dram', wiredAtNs, readyAtNs);
     this.schedule(readyAtNs, () => {
       this.setOutstanding('memory', this.outstanding.memory - 1);
       this.releaseWaiters('memory', readyAtNs);
@@ -287,10 +310,18 @@ export class MemorySystemSimulation {
     request.path.length = 0;
 
     let finishedAtNs = atNs;
-    for (const level of path) {
-      finishedAtNs = this.fillLevel(level, request.access.address, request.access.bytes, finishedAtNs);
-      this.setOutstanding(level, this.outstanding[level] - 1);
-      this.releaseWaiters(level, finishedAtNs);
+    // Reversed: the line comes back from the DRAM into the L3 first, then down
+    // through L2 into L1, which is the order the data actually moves.
+    for (const entry of [...path].reverse()) {
+      const fillStartNs = finishedAtNs;
+      // One span from the original probe to the start of the fill, so the
+      // request is visibly resident for the whole wait — which is most of what
+      // a dependent chase spends its time doing.
+      this.recordSpan(request, entry.level, 'level', entry.waitStartNs, fillStartNs);
+      finishedAtNs = this.fillLevel(entry.level, request.access.address, request.access.bytes, finishedAtNs);
+      this.recordSpan(request, entry.level, 'fill', fillStartNs, finishedAtNs);
+      this.setOutstanding(entry.level, this.outstanding[entry.level] - 1);
+      this.releaseWaiters(entry.level, finishedAtNs);
     }
 
     const latencyNs = finishedAtNs - request.issuedAtNs;
@@ -357,6 +388,18 @@ export class MemorySystemSimulation {
     this.outstandingMax[level] = Math.max(this.outstandingMax[level], value);
   }
 
+  private recordSpan(
+    request: Request,
+    level: LevelId,
+    kind: SimSpan['kind'],
+    startNs: number,
+    endNs: number,
+  ): void {
+    if (request.index >= this.traceLimit)
+      return;
+    this.spans.push({ endNs, kind, level, requestIndex: request.index, startNs });
+  }
+
   private buildResult(): SimResult {
     const elapsedNs = this.lastCompletionNs;
 
@@ -412,6 +455,7 @@ export class MemorySystemSimulation {
       movedBytes: this.movedBytes,
       outstanding,
       resources,
+      spans: this.spans,
     };
   }
 

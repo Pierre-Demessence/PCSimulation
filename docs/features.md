@@ -13,8 +13,21 @@ Product-level feature list. One line per feature: name — description — owner
   the dependency chain). — owner: Pierre
 - **Motherboard compatibility** — refuses a DIMM the board will not accept and
   explains which rule it broke. — owner: Pierre
-- **Results readout** — a plain table of elapsed time, achieved bandwidth, mean
-  latency and limiter per rig. — owner: Pierre
+- **Results readout** — cards for time to finish, achieved bandwidth, mean
+  latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
+  with a tooltip stating what it means and its unit. — owner: Pierre
+- **Animated data path** — a Canvas 2D view of the hierarchy where each level
+  shows its utilisation, a log-scaled accumulator and how many requests are in
+  flight, with glyphs travelling down as misses and back up as fills. — owner: Pierre
+- **Saturated-resource tagging** — the busiest resource is tagged three ways at
+  once (colour, hatch density and the word BOTTLENECK), so the meaning never
+  rests on colour alone. — owner: Pierre
+- **Isolating controls** — memory speed and CAS latency are dialled
+  independently, with the rest of the rig fixed, so bandwidth and latency can
+  be told apart. — owner: Pierre
+- **Playback control** — a labelled constant dilation ("1 real second = N
+  simulated") and a logarithmic speed slider, so no axis lies about magnitude.
+  — owner: Pierre
 
-Planned: an animated data-flow view, preset picking with isolating sliders, and
-headless batch comparison in a worker. See [roadmap.md](roadmap.md).
+Planned: the delta against the previous run, and headless batch comparison in a
+Web Worker. See [roadmap.md](roadmap.md).

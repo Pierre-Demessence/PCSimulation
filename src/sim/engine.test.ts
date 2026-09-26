@@ -6,6 +6,7 @@ import { findPreset } from '@/data';
 
 import { generateAccesses, mixedSpec, randomSpec, streamingSpec } from '@/workloads';
 import { simulate } from './engine';
+import { aggregateBandwidthBytesPerNs } from './memory';
 
 /**
  * Small enough to keep the suite fast; large enough that the pipeline reaches
@@ -183,5 +184,57 @@ describe('memory system simulation', () => {
     expect(result.accesses).toBe(0);
     expect(result.achievedBandwidthBytesPerNs).toBe(0);
     expect(result.meanLatencyNs).toBe(0);
+  });
+
+  it('moves the limiter off the bus once memory outruns the cache below it', () => {
+    const preset = findPreset('rig-2019');
+    if (preset === undefined)
+      throw new Error('missing preset: rig-2019');
+
+    const accesses = generateAccesses(streamingSpec({ accessCount: ACCESS_COUNT }));
+    expect(simulate(preset.config, accesses).bottleneckId).toBe('memory');
+
+    // An absurdly fast DIMM: past the L3's own 128 B/ns, so the wall moves
+    // rather than disappearing. This is acceptance criterion 2.
+    const memory = { ...preset.memory, mtPerSecond: 12_000 };
+    const result = simulate({ ...preset.config, memory }, accesses);
+
+    expect(result.bottleneckId).toBe('l3');
+    expect(result.classification).toBe('resource-bound');
+    expect(result.achievedBandwidthBytesPerNs).toBeLessThanOrEqual(
+      aggregateBandwidthBytesPerNs(memory) * 0.9,
+    );
+  });
+
+  it('traces nothing by default, and only the requested accesses when asked', () => {
+    const preset = findPreset('rig-2019');
+    if (preset === undefined)
+      throw new Error('missing preset: rig-2019');
+
+    const accesses = generateAccesses(streamingSpec({ accessCount: 200 }));
+    expect(simulate(preset.config, accesses).spans).toHaveLength(0);
+
+    const traced = simulate(preset.config, accesses, { traceRequests: 10 });
+    expect(traced.spans.length).toBeGreaterThan(0);
+    expect(traced.spans.every(candidate => candidate.requestIndex < 10)).toBe(true);
+  });
+
+  it('traces well-formed spans covering lookup, transfer and fill', () => {
+    const preset = findPreset('rig-2019');
+    if (preset === undefined)
+      throw new Error('missing preset: rig-2019');
+
+    const accesses = generateAccesses(streamingSpec({ accessCount: 200 }));
+    const result = simulate(preset.config, accesses, { traceRequests: 50 });
+
+    for (const kind of ['level', 'transfer', 'dram', 'fill'] as const)
+      expect(result.spans.some(candidate => candidate.kind === kind)).toBe(true);
+
+    for (const candidate of result.spans) {
+      expect(candidate.startNs).toBeGreaterThanOrEqual(0);
+      expect(candidate.endNs).toBeGreaterThanOrEqual(candidate.startNs);
+      // The view plays this window, so nothing may sit outside it.
+      expect(candidate.endNs).toBeLessThanOrEqual(result.elapsedNs);
+    }
   });
 });

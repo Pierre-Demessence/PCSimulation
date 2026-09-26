@@ -25,4 +25,5 @@ export type {
   ResourceRole,
   ResourceStats,
   SimResult,
+  SimSpan,
 } from './types';
