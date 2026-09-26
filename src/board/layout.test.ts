@@ -111,9 +111,10 @@ describe('boardLayout', () => {
 
   it('picks the part on top when a cache sits on its package', () => {
     const layout = rig('rig-2019');
-    expect(partAtPoint(layout, 0, 65, 53)?.id).toBe('l1');
-    expect(partAtPoint(layout, 0, 50, 44)?.id).toBe('cpu');
-    expect(partAtPoint(layout, 0, 142, 90)?.id).toBe('memory');
+    expect(partAtPoint(layout, 0, 114, 58)?.id).toBe('l1');
+    // The package's own name strip, above the cache plates.
+    expect(partAtPoint(layout, 0, 122, 43)?.id).toBe('cpu');
+    expect(partAtPoint(layout, 0, 185, 93)?.id).toBe('memory');
     expect(partAtPoint(layout, 0, 5, 5)).toBeUndefined();
   });
 
@@ -183,13 +184,17 @@ describe('linkSegment', () => {
   it('draws the memory trace toward the DIMMs', () => {
     const layout = rig('rig-2019');
     const link = layout.links.find(candidate => candidate.id === 'l3-memory');
-    if (link === undefined)
-      throw new Error('the layout has no memory link');
+    const memory = partById(layout, 'memory');
+    if (link === undefined || memory === undefined)
+      throw new Error('the layout has no memory link or no DIMM bank');
+
     const segment = linkSegment(layout, 0, link);
     if (segment === null)
       throw new Error('the memory trace should be visible while collapsed');
 
-    expect(segment.to.xMm).toBeGreaterThan(segment.from.xMm);
-    expect(segment.to.xMm).toBeLessThanOrEqual(120);
+    // It starts at the CPU package and stops at the sockets, because a trace
+    // that ran into the bank would be buried in the sticks.
+    expect(segment.to.xMm).toBeCloseTo(partRect(memory, 0).xMm);
+    expect(segment.from.xMm).toBeLessThan(segment.to.xMm);
   });
 });

@@ -24,6 +24,8 @@ export const COLOURS = {
   partEdge: '#4a5a6e',
   partFill: '#243040',
   partFillCpu: '#2b3846',
+  /** The board surface where a view is lit: dark, but light enough to take a shadow. */
+  plate: '#242c36',
   saturated: '#c8322b',
   stripEdge: '#5a7290',
   stripEmptyEdge: '#2a333f',

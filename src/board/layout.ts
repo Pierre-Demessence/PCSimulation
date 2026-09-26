@@ -24,7 +24,7 @@ export const BOARD_HEIGHT_MM = 244;
  */
 const PARTS: readonly BoardPart[] = [
   {
-    boardRect: { hMm: 66, wMm: 60, xMm: 48, yMm: 36 },
+    boardRect: { hMm: 45, wMm: 45, xMm: 100, yMm: 40 },
     explodedRect: { hMm: 60, wMm: 60, xMm: 12, yMm: 20 },
     id: 'cpu',
     kind: 'cpu',
@@ -33,7 +33,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'CPU',
   },
   {
-    boardRect: { hMm: 20, wMm: 20, xMm: 54, yMm: 48 },
+    boardRect: { hMm: 20, wMm: 20, xMm: 104, yMm: 48 },
     explodedRect: { hMm: 32, wMm: 32, xMm: 86, yMm: 34 },
     id: 'l1',
     kind: 'cache',
@@ -42,7 +42,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'L1',
   },
   {
-    boardRect: { hMm: 26, wMm: 28, xMm: 78, yMm: 48 },
+    boardRect: { hMm: 20, wMm: 16, xMm: 127, yMm: 48 },
     explodedRect: { hMm: 40, wMm: 40, xMm: 132, yMm: 30 },
     id: 'l2',
     kind: 'cache',
@@ -51,7 +51,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'L2',
   },
   {
-    boardRect: { hMm: 18, wMm: 52, xMm: 54, yMm: 76 },
+    boardRect: { hMm: 8, wMm: 39, xMm: 104, yMm: 71 },
     explodedRect: { hMm: 46, wMm: 56, xMm: 186, yMm: 26 },
     id: 'l3',
     kind: 'cache',
@@ -60,7 +60,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'L3',
   },
   {
-    boardRect: { hMm: 128, wMm: 44, xMm: 120, yMm: 26 },
+    boardRect: { hMm: 134, wMm: 46, xMm: 162, yMm: 26 },
     explodedRect: { hMm: 72, wMm: 42, xMm: 254, yMm: 20 },
     id: 'memory',
     kind: 'dimm',
@@ -69,7 +69,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'RAM',
   },
   {
-    boardRect: { hMm: 24, wMm: 88, xMm: 26, yMm: 112 },
+    boardRect: { hMm: 28, wMm: 92, xMm: 25, yMm: 112 },
     explodedRect: { hMm: 26, wMm: 100, xMm: 16, yMm: 112 },
     id: 'gpu',
     kind: 'gpu',
@@ -78,7 +78,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'GPU',
   },
   {
-    boardRect: { hMm: 14, wMm: 76, xMm: 96, yMm: 164 },
+    boardRect: { hMm: 10, wMm: 66, xMm: 92, yMm: 150 },
     explodedRect: { hMm: 16, wMm: 76, xMm: 16, yMm: 152 },
     id: 'm2',
     kind: 'slot',
@@ -87,7 +87,7 @@ const PARTS: readonly BoardPart[] = [
     short: 'M.2',
   },
   {
-    boardRect: { hMm: 40, wMm: 40, xMm: 196, yMm: 148 },
+    boardRect: { hMm: 42, wMm: 42, xMm: 208, yMm: 174 },
     explodedRect: { hMm: 44, wMm: 44, xMm: 128, yMm: 116 },
     id: 'chipset',
     kind: 'chipset',
@@ -96,20 +96,20 @@ const PARTS: readonly BoardPart[] = [
     short: 'Chipset',
   },
   {
-    boardRect: { hMm: 44, wMm: 44, xMm: 252, yMm: 176 },
+    boardRect: { hMm: 48, wMm: 42, xMm: 256, yMm: 148 },
     explodedRect: { hMm: 40, wMm: 60, xMm: 128, yMm: 172 },
     id: 'storage',
     kind: 'storage',
-    label: 'Drive bays',
+    label: 'SATA ports and drive bays',
     levelId: null,
     short: 'Drives',
   },
   {
-    boardRect: { hMm: 32, wMm: 40, xMm: 256, yMm: 30 },
+    boardRect: { hMm: 48, wMm: 22, xMm: 276, yMm: 88 },
     explodedRect: { hMm: 44, wMm: 80, xMm: 208, yMm: 116 },
     id: 'psu',
     kind: 'psu',
-    label: 'Power delivery',
+    label: 'Power delivery (24-pin ATX)',
     levelId: null,
     short: 'PSU',
   },

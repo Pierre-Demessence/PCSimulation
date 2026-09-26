@@ -1,7 +1,7 @@
 import type { BoardData } from './board-data';
 import type { HudData } from './hud';
 
-import type { BoardPart } from '@/board';
+import type { BoardPart, PartKind } from '@/board';
 
 import type { SimSpan } from '@/sim';
 
@@ -19,6 +19,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   OctahedronGeometry,
+  PCFShadowMap,
   PerspectiveCamera,
   Raycaster,
   RepeatWrapping,
@@ -74,6 +75,38 @@ interface StickView {
   readonly material: MeshStandardMaterial;
 }
 
+/**
+ * A detail that makes a part recognisable, sized and placed as a fraction of the
+ * part's own box — so it follows the rectangle as the view explodes, without a
+ * single hard-coded millimetre.
+ */
+interface Accent {
+  readonly mesh: Mesh;
+  /** Size as a fraction of the part's width, height and depth. */
+  readonly fx: number;
+  readonly fy: number;
+  readonly fz: number;
+  /** Centre, as a fraction of the same box. */
+  readonly ox: number;
+  readonly oy: number;
+  readonly oz: number;
+}
+
+/** What each kind of part has bolted to it, and nothing else does. */
+const ACCENTS: Partial<Record<PartKind, readonly Omit<Accent, 'mesh'>[]>> = {
+  // A socket frame the package sits inside.
+  cpu: [{ fx: 1.18, fy: 0.12, fz: 1.18, ox: 0, oy: 0.06, oz: 0 }],
+  // A heatsink on the chipset.
+  chipset: [{ fx: 0.72, fy: 0.5, fz: 0.72, ox: 0, oy: 1.2, oz: 0 }],
+  // A card: an I/O bracket at one end, and a cooler block along the top.
+  gpu: [
+    { fx: 0.05, fy: 1.08, fz: 1.08, ox: -0.5, oy: 0.5, oz: 0 },
+    { fx: 0.85, fy: 0.45, fz: 0.82, ox: 0.03, oy: 1.15, oz: 0 },
+  ],
+  // A stick: the screw tab at the far end.
+  slot: [{ fx: 0.04, fy: 1.5, fz: 0.9, ox: 0.42, oy: 0.75, oz: 0 }],
+};
+
 interface PartView {
   readonly group: Group;
   /**
@@ -85,6 +118,7 @@ interface PartView {
   readonly material: MeshStandardMaterial;
   /** Empty for a part that is not drawn as a row of slots. */
   readonly sticks: StickView[];
+  readonly accents: Accent[];
   readonly label: Sprite;
 }
 
@@ -252,11 +286,34 @@ export class BoardModel {
     if (renderer !== null) {
       renderer.outputColorSpace = SRGBColorSpace;
       this.scene.background = new Color(COLOURS.background);
-      this.scene.add(new HemisphereLight(0x9FB4CC, 0x1B2330, 1.6));
+      // A dim fill and a strong key: with the fill too bright, a contact shadow
+      // has nothing to darken and the parts read as pasted on.
+      this.scene.add(new HemisphereLight(0x9FB4CC, 0x1B2330, 0.85));
 
-      const sun = new DirectionalLight(0xFFFFFF, 2.4);
-      sun.position.set(180, 420, 260);
-      this.scene.add(sun);
+      // Contact shadows are what stop a part reading as if it were hovering over
+      // the board, which a dark plate and no shadow do very convincingly.
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = PCFShadowMap;
+
+      const sun = new DirectionalLight(0xFFFFFF, 3.2);
+      // Up, in front and to the left, so every part throws its shadow to the
+      // right and back — where the camera can see it. A light straight overhead
+      // hides each shadow behind its own part, which reads as no shadow at all.
+      sun.position.set(20, 400, 420);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.bias = -0.0004;
+      sun.shadow.normalBias = 0.6;
+      // Aimed at the middle of the board, so the shadow frustum stays tight.
+      sun.target.position.set(CAMERA_X, 0, CAMERA_Z_AIM);
+      sun.shadow.camera.left = -190;
+      sun.shadow.camera.right = 190;
+      sun.shadow.camera.top = 190;
+      sun.shadow.camera.bottom = -190;
+      sun.shadow.camera.near = 1;
+      sun.shadow.camera.far = 1400;
+      sun.shadow.camera.updateProjectionMatrix();
+      this.scene.add(sun, sun.target);
 
       this.scene.add(this.parts, this.traces, this.marks, this.labels);
       this.camera.position.set(CAMERA_X, CAMERA_Y, CAMERA_Z);
@@ -358,8 +415,9 @@ export class BoardModel {
 
     const plate = new Mesh(
       UNIT_BOX,
-      new MeshStandardMaterial({ color: COLOURS.recess, roughness: 0.95 }),
+      new MeshStandardMaterial({ color: COLOURS.plate, roughness: 0.95 }),
     );
+    plate.receiveShadow = true;
     plate.scale.set(data.layout.widthMm, BOARD_THICKNESS_MM, data.layout.heightMm);
     plate.position.set(data.layout.widthMm / 2, -BOARD_THICKNESS_MM / 2, data.layout.heightMm / 2);
     this.parts.add(plate);
@@ -391,14 +449,27 @@ export class BoardModel {
     // slots a rig populates changes with the rig.
     const material = new MeshStandardMaterial({ color: COLOURS.partFill, roughness: 0.65 });
     const body = new Mesh(UNIT_BOX, material);
+    body.castShadow = true;
     this.pickTargets.set(body, part.id);
     group.add(body);
+
+    // The details that make a kind of part recognisable at a glance.
+    const accents: Accent[] = [];
+    for (const spec of ACCENTS[part.kind] ?? []) {
+      const mesh = new Mesh(
+        UNIT_BOX,
+        new MeshStandardMaterial({ color: COLOURS.partEdge, roughness: 0.7 }),
+      );
+      mesh.castShadow = true;
+      group.add(mesh);
+      accents.push({ ...spec, mesh });
+    }
 
     const label = labelSprite(part.short, false);
     this.labels.add(label);
 
     this.parts.add(group);
-    return { body, group, label, material, sticks: [] };
+    return { accents, body, group, label, material, sticks: [] };
   }
 
   /** Grows or shrinks the stick set to match the slots the current rig reports. */
@@ -416,6 +487,7 @@ export class BoardModel {
     while (view.sticks.length < wanted) {
       const stickMaterial = new MeshStandardMaterial({ color: COLOURS.stripFill, roughness: 0.8 });
       const mesh = new Mesh(UNIT_BOX, stickMaterial);
+      mesh.castShadow = true;
       this.pickTargets.set(mesh, part.id);
       view.group.add(mesh);
       view.sticks.push({ material: stickMaterial, mesh });
@@ -438,6 +510,19 @@ export class BoardModel {
       const centreZ = rect.yMm + rect.hMm / 2;
 
       view.group.position.set(centreX, place.bottomMm, centreZ);
+
+      for (const accent of view.accents) {
+        accent.mesh.scale.set(
+          rect.wMm * accent.fx,
+          place.heightMm * accent.fy,
+          rect.hMm * accent.fz,
+        );
+        accent.mesh.position.set(
+          rect.wMm * accent.ox,
+          place.heightMm * accent.oy,
+          rect.hMm * accent.oz,
+        );
+      }
 
       if (part.strips === undefined) {
         view.body.scale.set(rect.wMm, place.heightMm, rect.hMm);
