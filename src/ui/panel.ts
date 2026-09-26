@@ -23,22 +23,36 @@ export interface IsolatingControls {
   readonly casLatency: number;
 }
 
+/** Which picture of the machine is on screen. */
+export type ViewMode = 'board' | 'flow' | 'model';
+
 export interface PanelState {
   readonly presetId: string;
   readonly workloadKind: WorkloadKind;
   readonly nsPerSecond: number;
   readonly playing: boolean;
   readonly isolating: IsolatingControls;
+  readonly view: ViewMode;
+  /** 0 assembles the parts onto the board; 1 pulls them fully apart. */
+  readonly explode: number;
 }
 
 export interface PanelOptions {
   readonly presets: readonly { readonly id: string; readonly title: string }[];
   readonly onChange: (patch: Partial<PanelState>) => void;
+  readonly onResetView: () => void;
   readonly onRestart: () => void;
 }
 
 const MT_RANGE = { max: 12_000, min: 1_600, step: 200 };
 const CL_RANGE = { max: 46, min: 8, step: 1 };
+const EXPLODE_RANGE = { max: 1, min: 0, step: 0.01 };
+
+const VIEW_LABELS: Record<ViewMode, string> = {
+  board: 'Board — flat, seen from above',
+  flow: 'Flow — one row per level',
+  model: 'Model — 3D, orbit and zoom',
+};
 
 const WORKLOAD_LABELS: Record<WorkloadKind, string> = {
   mixed: 'Mixed — half dependent hops',
@@ -106,6 +120,9 @@ export class ControlPanel {
 
   private readonly presetSelect = element('select', 'control');
   private readonly workloadSelect = element('select', 'control');
+  private readonly viewSelect = element('select', 'control');
+  private readonly explodeSlider = element('input', 'control');
+  private readonly explodeReadout = element('span', 'readout');
   private readonly mtInput = element('input', 'control');
   private readonly mtReadout = element('span', 'readout');
   private readonly clSlider = element('input', 'control');
@@ -131,6 +148,15 @@ export class ControlPanel {
     for (const kind of ['streaming', 'random', 'mixed'] as const)
       this.workloadSelect.append(new Option(WORKLOAD_LABELS[kind], kind));
 
+    for (const view of ['model', 'board', 'flow'] as const)
+      this.viewSelect.append(new Option(VIEW_LABELS[view], view));
+
+    configureRange(this.explodeSlider, EXPLODE_RANGE.min, EXPLODE_RANGE.max, EXPLODE_RANGE.step);
+    this.explodeSlider.title
+      = 'How far apart to pull the parts. At 0 they assemble onto the board; at 100% they separate, so the traces buried inside a package become visible.';
+    this.viewSelect.title
+      = 'Model draws the machine in 3D where you can orbit it; Board draws it flat; Flow draws one row per cache level.';
+
     configureRange(this.mtInput, MT_RANGE.min, MT_RANGE.max, MT_RANGE.step);
     this.mtInput.title
       = 'Memory speed in MT/s. Channel count and CAS latency stay fixed, so this isolates bandwidth on its own.';
@@ -146,6 +172,9 @@ export class ControlPanel {
     this.playButton.title = 'Pause or resume the animation. The numbers are unaffected.';
     const restart = element('button', 'control', 'Restart');
     restart.title = 'Rewind the animation to the start of the traced window.';
+    const resetView = element('button', 'control', 'Reset view');
+    resetView.title
+      = 'Puts the 3D camera back to its opening angle. In the flat views there is no camera to reset.';
 
     this.presetSelect.addEventListener('change', () =>
       this.options.onChange({ presetId: this.presetSelect.value }));
@@ -163,6 +192,12 @@ export class ControlPanel {
         isolating: { casLatency: Number(this.clSlider.value), mtPerSecond: this.mtPerSecond },
       }));
 
+    this.viewSelect.addEventListener('change', () =>
+      this.options.onChange({ view: this.viewSelect.value as ViewMode }));
+
+    this.explodeSlider.addEventListener('input', () =>
+      this.options.onChange({ explode: Number(this.explodeSlider.value) }));
+
     this.playbackSlider.addEventListener('input', () =>
       this.options.onChange({ nsPerSecond: nsPerSecondFromSlider(Number(this.playbackSlider.value)) }));
 
@@ -170,9 +205,12 @@ export class ControlPanel {
       this.options.onChange({ playing: !(this.state?.playing ?? true) }));
 
     restart.addEventListener('click', () => this.options.onRestart());
+    resetView.addEventListener('click', () => this.options.onResetView());
 
     const controls = element('div', 'controls');
     controls.append(
+      slot('View', this.viewSelect),
+      slot('Explode', this.explodeSlider, this.explodeReadout),
       slot('Rig', this.presetSelect),
       slot('Workload', this.workloadSelect),
       slot('Memory speed', this.mtInput, this.mtReadout),
@@ -180,6 +218,7 @@ export class ControlPanel {
       slot('Speed', this.playbackSlider, this.playbackReadout),
       slot('Animation', this.playButton),
       slot('', restart),
+      slot('', resetView),
     );
 
     this.warnings.setAttribute('aria-live', 'polite');
@@ -226,6 +265,11 @@ export class ControlPanel {
       state.playing ? 'Pause the animation' : 'Play the animation',
     );
     this.playbackReadout.textContent = `1 s = ${formatDuration(state.nsPerSecond)}`;
+    this.viewSelect.value = state.view;
+    this.explodeSlider.value = String(state.explode);
+    this.explodeReadout.textContent = state.explode <= 0
+      ? 'assembled on the board'
+      : state.explode >= 1 ? 'fully apart' : `${Math.round(state.explode * 100)}% apart`;
   }
 
   /**

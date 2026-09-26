@@ -12,8 +12,11 @@
   `npm run lint` / `npm run lint:fix`.
 - **Path alias:** `@/*` → `src/*` (kept in sync across `tsconfig.json`,
   `vite.config.ts`, and `vitest.config.ts`).
-- **Runtime dependencies:** none. The simulation is plain TypeScript; the app
-  uses the DOM today and Canvas 2D plus a Web Worker later.
+- **Runtime dependencies:** `three` only, and only for the 3D model view. The
+  simulation is plain TypeScript; the flat views use the DOM and Canvas 2D.
+  Three.js is most of the production bundle (about 157 kB gzipped), which is the
+  price of the third dimension. Loading it lazily is a candidate if the first
+  paint ever matters more than the model.
 - **Branding:** the `name` in `brand.json` is injected into `index.html` via the
   `%APP_NAME%` placeholder at build time.
 - **Package manager:** npm.

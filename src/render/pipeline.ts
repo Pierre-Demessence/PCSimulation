@@ -1,6 +1,10 @@
 import type { BottleneckClass, LevelId, ResourceRole, SimSpan } from '@/sim';
 
+import { isResident, tokensAt, travelsBackUp } from '@/board';
+
 import { formatCount, formatDuration, formatPercent, logBar } from './format';
+import { drawCentredMessage, drawGlyph, drawHatch, PHASE_LEGEND } from './glyphs';
+import { COLOURS, FONT_MONO, FONT_SANS, utilisationColour, utilisationHatch } from './palette';
 
 const ROW_ORDER: readonly LevelId[] = ['cpu', 'l1', 'l2', 'l3', 'memory'];
 
@@ -16,28 +20,6 @@ const LEVEL_LABELS: Record<LevelId, string> = {
 export function levelLabel(id: LevelId): string {
   return LEVEL_LABELS[id];
 }
-
-/**
- * Palette note: red, orange and green are the requested family, but a
- * red/green weakness makes hue alone unreliable, so every state also carries a
- * hatch density, a text label and a number. The colour is the bonus cue.
- */
-const COLOURS = {
-  background: '#11151c',
-  band: '#1a2029',
-  bandEdge: '#2a333f',
-  busy: '#d98a2b',
-  fillOutline: '#b9a7ff',
-  ok: '#2f9e44',
-  packet: '#79b8ff',
-  saturated: '#c8322b',
-  text: '#e8eef5',
-  muted: '#96a3b2',
-  wait: '#d9b36c',
-};
-
-const FONT_SANS = 'system-ui, -apple-system, Segoe UI, sans-serif';
-const FONT_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 const PADDING_X = 14;
 const HEADER_H = 50;
@@ -71,10 +53,15 @@ export function simulatedNsAt(elapsedMs: number, nsPerSecond: number): number {
   return (elapsedMs / 1000) * nsPerSecond;
 }
 
+/**
+ * How many requests are in flight at a level. Shares the residency predicate
+ * with `tokensAt` rather than restating it, and stays allocation-free because it
+ * runs once per row per frame.
+ */
 export function countActiveSpans(spans: readonly SimSpan[], level: LevelId, atNs: number): number {
   let active = 0;
   for (const span of spans) {
-    if (span.level === level && span.startNs <= atNs && atNs < span.endNs)
+    if (span.level === level && isResident(span, atNs))
       active += 1;
   }
   return active;
@@ -129,7 +116,7 @@ export class PipelineView {
 
     const data = this.data;
     if (data === null) {
-      this.drawCentredMessage(context, cssWidth, cssHeight, 'Running the simulation…');
+      drawCentredMessage(context, cssWidth, cssHeight, 'Running the simulation…');
       return;
     }
 
@@ -258,69 +245,9 @@ export class PipelineView {
     context.fillRect(rect.x, rect.y, rect.w, rect.h);
 
     const filled = rect.w * Math.min(1, Math.max(0, utilisation));
-    context.fillStyle = utilisation >= 0.8 ? COLOURS.saturated : utilisation >= 0.5 ? COLOURS.busy : COLOURS.ok;
+    context.fillStyle = utilisationColour(utilisation);
     context.fillRect(rect.x, rect.y, filled, rect.h);
-
-    const spacing = utilisation >= 0.8 ? 3 : utilisation >= 0.5 ? 6 : utilisation > 0 ? 12 : 0;
-    if (spacing > 0 && filled > 0) {
-      context.save();
-      context.beginPath();
-      context.rect(rect.x, rect.y, filled, rect.h);
-      context.clip();
-      context.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-      context.lineWidth = 1;
-      for (let x = rect.x - rect.h; x < rect.x + filled + rect.h; x += spacing) {
-        context.beginPath();
-        context.moveTo(x, rect.y + rect.h);
-        context.lineTo(x + rect.h, rect.y);
-        context.stroke();
-      }
-      context.restore();
-    }
-  }
-
-  /**
-   * One glyph shape per phase, so the meaning survives with no colour
-   * perception at all: square = resident at a cache level, triangle = moving on
-   * the bus, diamond = waiting on the DRAM, hollow square = line returning.
-   */
-  private drawGlyph(context: CanvasRenderingContext2D, kind: SimSpan['kind'], x: number, y: number): void {
-    const half = PACKET_SIZE / 2;
-
-    if (kind === 'fill') {
-      context.strokeStyle = COLOURS.fillOutline;
-      context.lineWidth = 1.5;
-      context.strokeRect(x + 0.5, y + 0.5, PACKET_SIZE - 1, PACKET_SIZE - 1);
-      return;
-    }
-
-    if (kind === 'transfer') {
-      // A triangle: distinct from the square by shape alone, so the legend reads
-      // with no colour perception at all.
-      context.fillStyle = COLOURS.packet;
-      context.beginPath();
-      context.moveTo(x, y);
-      context.lineTo(x + PACKET_SIZE, y + half);
-      context.lineTo(x, y + PACKET_SIZE);
-      context.closePath();
-      context.fill();
-      return;
-    }
-
-    if (kind === 'dram') {
-      context.fillStyle = COLOURS.wait;
-      context.beginPath();
-      context.moveTo(x + half, y);
-      context.lineTo(x + PACKET_SIZE, y + half);
-      context.lineTo(x + half, y + PACKET_SIZE);
-      context.lineTo(x, y + half);
-      context.closePath();
-      context.fill();
-      return;
-    }
-
-    context.fillStyle = COLOURS.packet;
-    context.fillRect(x, y, PACKET_SIZE, PACKET_SIZE);
+    drawHatch(context, rect.x, rect.y, filled, rect.h, utilisationHatch(utilisation));
   }
 
   private drawPackets(
@@ -336,20 +263,17 @@ export class PipelineView {
     const travel = Math.max(4, rect.h - 60);
     const lanes = Math.max(1, Math.floor(laneWidth / PACKET_STRIDE));
 
-    for (const span of spans) {
-      if (span.level !== level || simulatedNs < span.startNs || simulatedNs >= span.endNs)
-        continue;
-
-      const duration = span.endNs - span.startNs;
-      const progress = duration > 0 ? (simulatedNs - span.startNs) / duration : 1;
-      const lane = span.requestIndex % lanes;
+    // The residency rule lives in one place, so this view and the board view
+    // cannot drift into disagreeing about what was in flight.
+    for (const token of tokensAt(spans, level, simulatedNs)) {
+      const lane = token.requestIndex % lanes;
       const x = laneX + lane * PACKET_STRIDE;
       // A fill travels back up toward the core; everything else travels down.
-      const y = span.kind === 'fill'
-        ? top + travel - progress * travel
-        : top + progress * travel;
+      const y = travelsBackUp(token.kind)
+        ? top + travel - token.progress * travel
+        : top + token.progress * travel;
 
-      this.drawGlyph(context, span.kind, x, y);
+      drawGlyph(context, token.kind, x, y, PACKET_SIZE);
     }
   }
 
@@ -374,16 +298,9 @@ export class PipelineView {
     const y = height - FOOTER_H + 14;
     context.font = `11px ${FONT_SANS}`;
 
-    const glyphs: readonly (readonly [SimSpan['kind'], string])[] = [
-      ['level', 'at a cache level'],
-      ['transfer', 'queued or on the bus'],
-      ['dram', 'waiting on DRAM'],
-      ['fill', 'line returning'],
-    ];
-
     let x = PADDING_X;
-    for (const [kind, label] of glyphs) {
-      this.drawGlyph(context, kind, x, y - 5);
+    for (const [kind, label] of PHASE_LEGEND) {
+      drawGlyph(context, kind, x, y - 5, PACKET_SIZE);
       context.fillStyle = COLOURS.muted;
       context.fillText(label, x + PACKET_SIZE + 6, y);
       x += PACKET_SIZE + 10 + context.measureText(label).width + 16;
@@ -405,19 +322,6 @@ export class PipelineView {
 
     context.textAlign = 'right';
     context.fillText(`${formatCount(data.spans.length)} traced spans`, width - PADDING_X, y + 34);
-    context.textAlign = 'left';
-  }
-
-  private drawCentredMessage(
-    context: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-    message: string,
-  ): void {
-    context.fillStyle = COLOURS.muted;
-    context.font = `13px ${FONT_SANS}`;
-    context.textAlign = 'center';
-    context.fillText(message, width / 2, height / 2);
     context.textAlign = 'left';
   }
 }

@@ -11,6 +11,21 @@ memory path, the workload profiles, the rig presets, the bottleneck classifier,
 and the animated data-path view with its isolating controls. Lint, tests and
 build are green. See the [v0.1 plan](plans/pc-simulation.md).
 
+The machine is also drawn as a picture now, and as an object: the 3D model is
+the default view, with the flat board and the swimlane beside it. See the
+[board view plan](plans/done/board-view.md).
+
+## Presentation waves
+
+The view is a picture of the machine, not a table of numbers. Each wave makes the
+picture truer to the object and easier to read.
+
+| Wave | Adds | Status |
+| --- | --- | --- |
+| P1 | Flat block diagram: parts in their board positions, traces, animated traffic and the Explode control | shipped |
+| P2 | The same model in 3D, with orbit, pan and zoom, and each part at its own height | shipped |
+| P3 | Explode in 3D: the parts lift off the board and the traces follow them, so the wiring surfaces | shipped |
+
 ## Component waves
 
 Each wave adds parts plus the workloads that stress them. A wave is not done
@@ -47,6 +62,15 @@ Recorded here so they are not lost when the v0.1 plan is archived.
 
 ## Deferred presentation work
 
+- Clicking a part in the 3D model to isolate it, dimming everything else.
+- Labels crowd each other when two parts sit close together in the collapsed
+  view; the 3D model has no de-confliction yet.
+- Loading three.js lazily, so the first paint does not wait for the whole 3D
+  engine. The production bundle is about 157 kB gzipped, nearly all of it three.
+- Narrow-canvas guards in the swimlane view: its header and its per-row figures
+  are measured against nothing, so below roughly 480 px the title, the
+  percentage and the BOTTLENECK tag can overlap. The two board views now trim
+  every line to their canvas.
 - The delta against the previous run in the readout.
 - Headless batch comparison in a Web Worker, so a slider change never waits.
 - Precomputing the per-frame labels instead of formatting them every frame.
@@ -62,7 +86,8 @@ Stated as the current intended state, not as history.
 - ISA or cycle-accurate microarchitecture simulation.
 - Predicting real-world FPS or benchmark scores to any useful accuracy; the
   sandbox teaches the *shape* of a bottleneck, not absolute numbers.
-- 3D visuals or a first-person "inside the PC" experience.
+- A first-person "inside the PC" experience. The machine is an object to orbit,
+  never a place to stand.
 - Online/multiplayer comparison or accounts.
 - Depending on `@pierre/ecs` for the simulation core. Revisit only if
   thousands of in-flight requests are later animated as individual entities;

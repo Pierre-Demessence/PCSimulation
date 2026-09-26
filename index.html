@@ -12,14 +12,33 @@
         One workload, the same parts, with a single component changed at a time.
         Watch where the time actually goes, and where it stops mattering.
       </p>
+      <div class="stage">
+        <div class="model" id="model">
+          <canvas
+            id="model3d"
+            role="img"
+            aria-label="The motherboard in three dimensions: the CPU package with its three cache levels, the memory sticks in their slots, the card and drive slots, and the traces between them, with requests travelling along the memory trace. Drag to orbit, right-drag or two fingers to pan, scroll to zoom. The readout below reports every number."
+          >
+            The 3D model needs WebGL support. The flat board view still works.
+          </canvas>
+          <canvas id="modelHud" aria-hidden="true"></canvas>
+        </div>
+        <canvas
+          id="board"
+          role="img"
+          aria-label="The motherboard seen from above: the CPU package with its three cache levels inside it, the memory slots beside it, the card and drive slots around them, and the traces between the parts. Requests travel along the memory trace. The readout below reports every number."
+        >
+          The board view needs canvas support. The readout below still reports every number.
+        </canvas>
+        <canvas
+          id="pipeline"
+          role="img"
+          aria-label="Animated view of the memory data path: the CPU, three cache levels and the memory bus, showing how busy each level is and where requests are waiting."
+        >
+          The animated data path needs canvas support. The readout below still reports every number.
+        </canvas>
+      </div>
       <div id="panel"></div>
-      <canvas
-        id="pipeline"
-        role="img"
-        aria-label="Animated view of the memory data path: the CPU, three cache levels and the memory bus, showing how busy each level is and where requests are waiting."
-      >
-        The animated data path needs canvas support. The readout above still reports every number.
-      </canvas>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -31,6 +31,11 @@ export function formatCount(value: number): string {
   return value.toLocaleString('en-US');
 }
 
+/** Clamps a fraction to 0..1, so a control cannot drive a bar past its track. */
+export function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
 /**
  * Log-scaled bar length, so quantities spanning orders of magnitude stay
  * visible. Callers must label the bar as logarithmic — a log bar next to a

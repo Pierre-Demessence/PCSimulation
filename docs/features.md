@@ -16,9 +16,22 @@ Product-level feature list. One line per feature: name — description — owner
 - **Results readout** — cards for time to finish, achieved bandwidth, mean
   latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
   with a tooltip stating what it means and its unit. — owner: Pierre
-- **Animated data path** — a Canvas 2D view of the hierarchy where each level
-  shows its utilisation, a log-scaled accumulator and how many requests are in
-  flight, with glyphs travelling down as misses and back up as fills. — owner: Pierre
+- **3D model view** — the machine as an object you can orbit, pan and zoom,
+  with each part drawn at its own height so a DIMM stick and an M.2 slot do not
+  look alike. The default view. — owner: Pierre
+- **Board view** — the same machine drawn flat, seen from above: the parts where
+  they sit on the motherboard, the CPU package with its three cache levels
+  inside it, the DIMM slots drawn as strips, and the traces between them. — owner: Pierre
+- **Explode control** — one slider that pulls the parts apart — in the 3D model
+  they lift off the board, and the traces follow them, so pulling the view apart
+  shows what is wired to what. — owner: Pierre
+- **View switch** — 3D model, flat board, or swimlane; only the active one is
+  drawn. — owner: Pierre
+- **Animated data path (the Flow view)** — a Canvas 2D view of the hierarchy
+  where each level shows its utilisation, a log-scaled accumulator and how many
+  requests are in flight, with glyphs travelling down as misses and back up as
+  fills. This is the secondary view, and the one that carries no meaning in
+  colour at all. — owner: Pierre
 - **Saturated-resource tagging** — the busiest resource is tagged three ways at
   once (colour, hatch density and the word BOTTLENECK), so the meaning never
   rests on colour alone. — owner: Pierre
@@ -29,5 +42,6 @@ Product-level feature list. One line per feature: name — description — owner
   simulated") and a logarithmic speed slider, so no axis lies about magnitude.
   — owner: Pierre
 
-Planned: the delta against the previous run, and headless batch comparison in a
-Web Worker. See [roadmap.md](roadmap.md).
+Planned: click a part in the 3D model to isolate it, the delta against the
+previous run, and headless batch comparison in a Web Worker. See
+[roadmap.md](roadmap.md) and [plans/done/board-view.md](plans/done/board-view.md).

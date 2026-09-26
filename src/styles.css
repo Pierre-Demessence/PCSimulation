@@ -39,12 +39,49 @@ h1 {
   color: var(--muted);
 }
 
-#pipeline {
-  display: block;
-  width: 100%;
-  height: 620px;
+/* The picture is the page. Everything else is a control or a readout for it. */
+.stage {
+  position: relative;
+  min-height: 0;
   border: 1px solid var(--edge);
   border-radius: 8px;
+  overflow: hidden;
+  background: #11151c;
+}
+
+.stage > canvas,
+.stage > .model {
+  display: block;
+  width: 100%;
+  height: 640px;
+}
+
+.stage > canvas[hidden],
+.stage > .model[hidden] {
+  display: none;
+}
+
+.model {
+  position: relative;
+}
+
+.model > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The HUD sits over the WebGL canvas and must not eat the orbit gestures. */
+.model > #modelHud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A tip, not a hint to the model itself: it must not swallow the drag either. */
+.model > canvas,
+.model > #modelHud {
+  touch-action: none;
 }
 
 .controls {

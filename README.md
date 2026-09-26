@@ -24,6 +24,26 @@ pointer chase ignores bandwidth completely — all three generations land within
 part. The very same DDR5 DIMM delivers 89.5 GB/s or 0.7 GB/s depending only on
 the access pattern.
 
+## Three views of the same run
+
+The **Model** view draws the machine as an object you can orbit, pan and zoom —
+the CPU package with its three cache levels, the memory sticks standing in their
+slots, the card and drive slots, and the traces between them. Each part has its
+own height, so a DIMM stick does not look like an M.2 slot.
+
+The **Board** view is the same machine drawn flat, seen from above. The **Flow**
+view is the same data as one row per level, with utilisation bars and a running
+count of requests in flight; it is the one that carries no meaning in colour at
+all.
+
+One slider, **Explode**, pulls the parts apart. In the flat view they separate
+until a cache buried inside the CPU package becomes a readable block; in the 3D
+model they lift off the board and the traces follow them, so you can see what is
+wired to what.
+
+The readout cards below the picture report every number, each with a tooltip
+saying what it means and what unit it is in.
+
 ## Getting started
 
 ```sh

@@ -16,8 +16,12 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
+  "dependencies": {
+    "three": "^0.186.0"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^8.0.0",
+    "@types/three": "^0.186.0",
     "@vitest/coverage-v8": "^4.1.2",
     "eslint": "^10.2.0",
     "jiti": "^2.6.1",
