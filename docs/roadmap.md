@@ -1,0 +1,63 @@
+# Roadmap
+
+Living document: what is planned, in what order, and what is deliberately out
+of scope. The current focus is the [v0.1 plan](plans/pc-simulation.md) —
+memory path only (CPU + RAM + motherboard).
+
+## Where we are
+
+v0.1's simulation core is built and tested: the discrete-event memory path, the
+three workload profiles, the three rig presets and the bottleneck classifier
+all work, and lint, tests and build are green. What remains before v0.1 is done
+is the presentation layer — the flow visualizer, the comparison UI with
+isolating sliders, and worker-backed batch runs. See the
+[v0.1 plan](plans/pc-simulation.md).
+
+## Component waves
+
+Each wave adds parts plus the workloads that stress them. A wave is not done
+until it can demonstrate a bottleneck *migrating* as a part is swapped.
+
+| Wave | Adds | Why it earns its place |
+| --- | --- | --- |
+| v0.2 | GPU + display link | Pure arithmetic, most striking demo: resolution × refresh × bits exceeds the cable rate (8K at 244 Hz ≈ 194 Gbit/s payload, ≈ 233 Gbit/s with blanking, versus HDMI 2.1's 48 Gbit/s and DisplayPort 2.1's 80 Gbit/s). Also shows a *second, independent* limit — the GPU's render rate. |
+| v0.3 | Storage (HDD / SATA SSD / NVMe) | Contrasts bandwidth-bound loads (game level streaming: SATA ~550 MB/s vs NVMe ~7 GB/s) against latency-bound ones (OS boot: HDD seek ~8 ms vs NVMe ~20–50 µs). Same lesson as RAM, and far larger in magnitude (HDD seek ~8 ms vs a full DRAM access of ~100 ns — nearly 5 orders of magnitude). |
+| v0.4 | PSU + thermals | Introduces budgets and a feedback loop: power → heat → thermal cap → lower boost clock → lower compute rate. Also teaches a *negative* lesson — a bigger PSU makes nothing faster. |
+
+## Deferred within the memory wave
+
+Recorded here so they are not lost when the v0.1 plan is archived.
+
+- Multi-core contention on the memory controller.
+- Cache coherence across cores.
+- DRAM banks, row buffers and refresh as optional advanced toggles.
+- Hardware prefetchers (a toggle, off by default), and true per-level MSHRs
+  instead of v0.1's generous outstanding-miss limits.
+- Out-of-order issue, so independent accesses are not held behind a dependent
+  one.
+- Associativity and eviction policies richer than the v0.1 set-associative
+  LRU model.
+- Memory channel topology beyond the basic case: how slot population choices
+  silently halve bandwidth — a high-value beginner demo.
+- NUMA / dual-socket layouts.
+- Full-system presets spanning CPU + GPU + storage, once all waves ship.
+
+## Deferred within the GPU and storage waves
+
+- PCIe lane splitting: filling M.2 slots drops the GPU to ×8 (v0.2).
+- Chipset uplink (DMI) saturation when many chipset devices are active (v0.3).
+
+## Non-goals
+
+Stated as the current intended state, not as history.
+
+- Full software emulation: no OS, no applications, no instruction execution.
+  That path leads to a VM and is explicitly rejected.
+- ISA or cycle-accurate microarchitecture simulation.
+- Predicting real-world FPS or benchmark scores to any useful accuracy; the
+  sandbox teaches the *shape* of a bottleneck, not absolute numbers.
+- 3D visuals or a first-person "inside the PC" experience.
+- Online/multiplayer comparison or accounts.
+- Depending on `@pierre/ecs` for the simulation core. Revisit only if
+  thousands of in-flight requests are later animated as individual entities;
+  then `render-canvas2d`, `stats` and `tick` become candidates.
