@@ -17,9 +17,11 @@ Product-level feature list. One line per feature: name — description — owner
   latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
   with a tooltip stating what it means and its unit. — owner: Pierre
 - **ATX placement** — every part sits where it would on a real ATX board: the
-  socket is a 45 mm package left of centre with the DIMM bank beside it, the
-  card slot low left, the chipset low right, and the power header and SATA ports
-  on the right edge. — owner: Pierre
+  rear I/O on the left edge level with the socket, the DIMM bank beside the
+  socket with the card slot running across the board below it, the chipset low
+  right, and the 24-pin header and SATA ports on the right edge. — owner: Pierre
+- **Contact shadows** — the 3D scene casts shadows onto the board, so a part
+  reads as resting on it rather than hovering above it. — owner: Pierre
 - **Part silhouettes** — a socket frame around the package, a heatsink on the
   chipset, an I/O bracket and a cooler on the card, and a screw tab on the M.2
   stick, so each kind is recognisable from its shape alone. — owner: Pierre

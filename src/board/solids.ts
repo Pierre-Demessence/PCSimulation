@@ -19,7 +19,8 @@ const SOLIDS: Record<PartKind, PartSolid> = {
   cpu: { baseMm: 0, heightMm: 8, liftMm: 0 },
   dimm: { baseMm: 0, heightMm: 31, liftMm: 42 },
   gpu: { baseMm: 0, heightMm: 24, liftMm: 52 },
-  psu: { baseMm: 0, heightMm: 20, liftMm: 60 },
+  // A power header sits flat on the board, unlike the pillar a box would make.
+  psu: { baseMm: 0, heightMm: 10, liftMm: 60 },
   slot: { baseMm: 0, heightMm: 3, liftMm: 24 },
   storage: { baseMm: 0, heightMm: 14, liftMm: 44 },
 };

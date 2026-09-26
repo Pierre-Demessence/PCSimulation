@@ -306,10 +306,12 @@ export class BoardModel {
       sun.shadow.normalBias = 0.6;
       // Aimed at the middle of the board, so the shadow frustum stays tight.
       sun.target.position.set(CAMERA_X, 0, CAMERA_Z_AIM);
-      sun.shadow.camera.left = -190;
-      sun.shadow.camera.right = 190;
-      sun.shadow.camera.top = 190;
-      sun.shadow.camera.bottom = -190;
+      // A little wider than the board needs: the light is a fixed frustum, and
+      // the corner of the board sits close to its edge.
+      sun.shadow.camera.left = -210;
+      sun.shadow.camera.right = 210;
+      sun.shadow.camera.top = 210;
+      sun.shadow.camera.bottom = -210;
       sun.shadow.camera.near = 1;
       sun.shadow.camera.far = 1400;
       sun.shadow.camera.updateProjectionMatrix();

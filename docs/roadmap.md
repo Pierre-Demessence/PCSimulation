@@ -25,6 +25,7 @@ picture truer to the object and easier to read.
 | P1 | Flat block diagram: parts in their board positions, traces, animated traffic and the Explode control | shipped |
 | P2 | The same model in 3D, with orbit, pan and zoom, and each part at its own height | shipped |
 | P3 | Explode in 3D: the parts lift off the board and the traces follow them, so the wiring surfaces | shipped |
+| P4 | Plausible ATX placement, a silhouette detail per kind of part, and contact shadows | shipped |
 
 ## Component waves
 

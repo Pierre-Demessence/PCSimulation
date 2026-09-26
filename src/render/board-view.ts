@@ -219,9 +219,13 @@ export class BoardView {
     context.lineWidth = 1;
     context.stroke();
 
+    // The rear I/O sits on the left edge, level with the socket. That is what
+    // makes the rest of the board read correctly: the expansion slots run
+    // perpendicular to this edge, so they and the card are long across the
+    // board while the DIMM bank is long down it, as on a real board.
     context.fillStyle = COLOURS.boardIo;
-    const io = this.toScreen({ xMm: 44, yMm: 0 });
-    context.fillRect(io.x, io.y, 96 * this.scale, 12 * this.scale);
+    const io = this.toScreen({ xMm: 0, yMm: 34 });
+    context.fillRect(io.x, io.y, 12 * this.scale, 52 * this.scale);
 
     context.fillStyle = COLOURS.background;
     const holes: readonly BoardPoint[] = [

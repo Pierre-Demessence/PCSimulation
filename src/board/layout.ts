@@ -105,13 +105,13 @@ const PARTS: readonly BoardPart[] = [
     short: 'Drives',
   },
   {
-    boardRect: { hMm: 48, wMm: 22, xMm: 276, yMm: 88 },
+    boardRect: { hMm: 64, wMm: 14, xMm: 284, yMm: 70 },
     explodedRect: { hMm: 44, wMm: 80, xMm: 208, yMm: 116 },
     id: 'psu',
     kind: 'psu',
-    label: 'Power delivery (24-pin ATX)',
+    label: 'Power delivery (24-pin ATX and EPS)',
     levelId: null,
-    short: 'PSU',
+    short: 'PWR',
   },
 ];
 
