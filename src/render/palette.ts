@@ -24,6 +24,8 @@ export const COLOURS = {
   partEdge: '#4a5a6e',
   partFill: '#243040',
   partFillCpu: '#2b3846',
+  /** PCB solder mask: a deep, desaturated navy that reads as a circuit board. */
+  pcb: '#182633',
   /** The board surface where a view is lit: dark, but light enough to take a shadow. */
   plate: '#242c36',
   saturated: '#c8322b',

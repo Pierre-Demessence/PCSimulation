@@ -18,9 +18,11 @@ import {
   LineBasicMaterial,
   Mesh,
   MeshStandardMaterial,
+  NeutralToneMapping,
   OctahedronGeometry,
-  PCFShadowMap,
+  PCFSoftShadowMap,
   PerspectiveCamera,
+  PMREMGenerator,
   Raycaster,
   RepeatWrapping,
   Scene,
@@ -33,6 +35,8 @@ import {
 } from 'three';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { partRect, roundTripProgress, solidAt, tokensAt, traceProgress } from '@/board';
 import { describePart } from './describe';
 import { clamp01 } from './format';
@@ -45,7 +49,7 @@ import { COLOURS, FONT_SANS, utilisationColour, utilisationHatch } from './palet
  * Y. One millimetre unit box is scaled per part, which keeps every solid on a
  * single geometry.
  */
-const UNIT_BOX = new BoxGeometry(1, 1, 1);
+const UNIT_BOX = new RoundedBoxGeometry(1, 1, 1, 2, 0.12);
 const BOARD_THICKNESS_MM = 6;
 const TOKEN_SIZE_MM = 5;
 const LABEL_WIDTH_MM = 46;
@@ -92,16 +96,34 @@ interface Accent {
   readonly oz: number;
 }
 
+/**
+ * A row of thin parallel slabs, spread along the part's width — the fins of a
+ * heatsink. Purely a shape cue; each fin is an ordinary accent, so the existing
+ * placement code lays them out with no special case.
+ */
+function fins(count: number, fy: number, fz: number, oy: number): readonly Omit<Accent, 'mesh'>[] {
+  const out: Omit<Accent, 'mesh'>[] = [];
+  for (let index = 0; index < count; index++) {
+    const t = count === 1 ? 0.5 : index / (count - 1);
+    out.push({ fx: 0.5 / count, fy, fz, ox: (t - 0.5) * (1 - 1 / count), oy, oz: 0 });
+  }
+  return out;
+}
+
 /** What each kind of part has bolted to it, and nothing else does. */
 const ACCENTS: Partial<Record<PartKind, readonly Omit<Accent, 'mesh'>[]>> = {
   // A socket frame the package sits inside.
   cpu: [{ fx: 1.18, fy: 0.12, fz: 1.18, ox: 0, oy: 0.06, oz: 0 }],
-  // A heatsink on the chipset.
-  chipset: [{ fx: 0.72, fy: 0.5, fz: 0.72, ox: 0, oy: 1.2, oz: 0 }],
-  // A card: an I/O bracket at one end, and a cooler block along the top.
+  // A finned heatsink on the chipset: a base plate carrying a row of fins.
+  chipset: [
+    { fx: 0.78, fy: 0.14, fz: 0.78, ox: 0, oy: 0.95, oz: 0 },
+    ...fins(6, 0.55, 0.78, 1.3),
+  ],
+  // A card: an I/O bracket at one end, and a finned cooler along the top.
   gpu: [
     { fx: 0.05, fy: 1.08, fz: 1.08, ox: -0.5, oy: 0.5, oz: 0 },
-    { fx: 0.85, fy: 0.45, fz: 0.82, ox: 0.03, oy: 1.15, oz: 0 },
+    { fx: 0.85, fy: 0.12, fz: 0.82, ox: 0.03, oy: 0.98, oz: 0 },
+    ...fins(7, 0.42, 0.82, 1.2).map(fin => ({ ...fin, ox: fin.ox + 0.03 })),
   ],
   // A stick: the screw tab at the far end.
   slot: [{ fx: 0.04, fy: 1.5, fz: 0.9, ox: 0.42, oy: 0.75, oz: 0 }],
@@ -285,23 +307,38 @@ export class BoardModel {
 
     if (renderer !== null) {
       renderer.outputColorSpace = SRGBColorSpace;
+      // Neutral tone mapping grades the scene without draining the palette: the
+      // utilisation colours must stay distinguishable, so a hue-preserving curve
+      // is chosen over ACES, which would desaturate the reds.
+      renderer.toneMapping = NeutralToneMapping;
+      renderer.toneMappingExposure = 1.05;
       this.scene.background = new Color(COLOURS.background);
+
+      // A generated room, blurred into an environment map, gives every matte
+      // material soft reflections — the difference between a coloured block and a
+      // surface. No texture file: the room is built and discarded at startup.
+      const pmrem = new PMREMGenerator(renderer);
+      const room = new RoomEnvironment();
+      this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+      room.dispose();
+      pmrem.dispose();
+
       // A dim fill and a strong key: with the fill too bright, a contact shadow
       // has nothing to darken and the parts read as pasted on.
-      this.scene.add(new HemisphereLight(0x9FB4CC, 0x1B2330, 0.85));
+      this.scene.add(new HemisphereLight(0x9FB4CC, 0x1B2330, 0.6));
 
       // Contact shadows are what stop a part reading as if it were hovering over
       // the board, which a dark plate and no shadow do very convincingly.
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = PCFShadowMap;
+      renderer.shadowMap.type = PCFSoftShadowMap;
 
-      const sun = new DirectionalLight(0xFFFFFF, 3.2);
+      const sun = new DirectionalLight(0xFFFFFF, 2.6);
       // Up, in front and to the left, so every part throws its shadow to the
       // right and back — where the camera can see it. A light straight overhead
       // hides each shadow behind its own part, which reads as no shadow at all.
       sun.position.set(20, 400, 420);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.mapSize.set(2048, 2048);
       sun.shadow.bias = -0.0004;
       sun.shadow.normalBias = 0.6;
       // Aimed at the middle of the board, so the shadow frustum stays tight.
@@ -316,6 +353,13 @@ export class BoardModel {
       sun.shadow.camera.far = 1400;
       sun.shadow.camera.updateProjectionMatrix();
       this.scene.add(sun, sun.target);
+
+      // A cool rim from behind-right catches the far edges of each part, so a
+      // chamfer reads as a chamfer instead of a flat silhouette. No shadow: its
+      // only job is the highlight.
+      const rim = new DirectionalLight(0x8FB0D8, 0.9);
+      rim.position.set(280, 180, -180);
+      this.scene.add(rim);
 
       this.scene.add(this.parts, this.traces, this.marks, this.labels);
       this.camera.position.set(CAMERA_X, CAMERA_Y, CAMERA_Z);
@@ -416,11 +460,12 @@ export class BoardModel {
       this.hatch.set(spacing, hatchTexture(spacing));
 
     const plate = new Mesh(
-      UNIT_BOX,
-      new MeshStandardMaterial({ color: COLOURS.plate, roughness: 0.95 }),
+      new RoundedBoxGeometry(data.layout.widthMm, BOARD_THICKNESS_MM, data.layout.heightMm, 1, 1.5),
+      // The PCB: a deep solder-mask colour, low metalness and a mid roughness so
+      // it catches a soft sheen from the environment rather than a hard glare.
+      new MeshStandardMaterial({ color: COLOURS.pcb, metalness: 0.15, roughness: 0.55 }),
     );
     plate.receiveShadow = true;
-    plate.scale.set(data.layout.widthMm, BOARD_THICKNESS_MM, data.layout.heightMm);
     plate.position.set(data.layout.widthMm / 2, -BOARD_THICKNESS_MM / 2, data.layout.heightMm / 2);
     this.parts.add(plate);
 
@@ -448,19 +493,23 @@ export class BoardModel {
     // carries the utilisation colour, the hatch, the bottleneck tint and the
     // hover highlight, so none of those clues go missing on the part most likely
     // to be the bottleneck. The sticks are built on demand, because how many
-    // slots a rig populates changes with the rig.
-    const material = new MeshStandardMaterial({ color: COLOURS.partFill, roughness: 0.65 });
+    // slots a rig populates changes with the rig. It stays near-dielectric on
+    // purpose: a high metalness would drink the utilisation colour, and that
+    // colour has to stay legible.
+    const material = new MeshStandardMaterial({ color: COLOURS.partFill, metalness: 0.08, roughness: 0.52 });
     const body = new Mesh(UNIT_BOX, material);
     body.castShadow = true;
     this.pickTargets.set(body, part.id);
     group.add(body);
 
-    // The details that make a kind of part recognisable at a glance.
+    // The details that make a kind of part recognisable at a glance. These are
+    // the metal of the machine — sockets, brackets, heatsinks — so they run
+    // metallic and pick up the environment as brushed aluminium would.
     const accents: Accent[] = [];
     for (const spec of ACCENTS[part.kind] ?? []) {
       const mesh = new Mesh(
         UNIT_BOX,
-        new MeshStandardMaterial({ color: COLOURS.partEdge, roughness: 0.7 }),
+        new MeshStandardMaterial({ color: COLOURS.partEdge, metalness: 0.85, roughness: 0.34 }),
       );
       mesh.castShadow = true;
       group.add(mesh);
@@ -487,7 +536,7 @@ export class BoardModel {
     }
 
     while (view.sticks.length < wanted) {
-      const stickMaterial = new MeshStandardMaterial({ color: COLOURS.stripFill, roughness: 0.8 });
+      const stickMaterial = new MeshStandardMaterial({ color: COLOURS.stripFill, metalness: 0.4, roughness: 0.48 });
       const mesh = new Mesh(UNIT_BOX, stickMaterial);
       mesh.castShadow = true;
       this.pickTargets.set(mesh, part.id);
