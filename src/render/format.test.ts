@@ -1,3 +1,5 @@
+import type { SimSpan } from '@/sim';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,12 +8,75 @@ import {
   formatCount,
   formatDuration,
   formatPercent,
+  formatUnit,
+  levelLabel,
   logBar,
   MAX_NS_PER_SECOND,
   MIN_NS_PER_SECOND,
   nsPerSecondFromSlider,
+  simulatedNsAt,
   sliderFromNsPerSecond,
+  windowOf,
 } from './format';
+
+describe('formatUnit', () => {
+  it('renders every unit at a readable width', () => {
+    expect(formatUnit(32 * 1024, 'bytes')).toBe('32 KiB');
+    expect(formatUnit(16 * 1024 ** 2, 'bytes')).toBe('16 MiB');
+    expect(formatUnit(32 * 1024 ** 3, 'bytes')).toBe('32 GiB');
+    expect(formatUnit(1.5 * 1024, 'bytes')).toBe('1.5 KiB');
+
+    expect(formatUnit(4e9, 'hz')).toBe('4 GHz');
+    expect(formatUnit(200e6, 'hz')).toBe('200 MHz');
+
+    // A hit time of 0.25 ns must not round to 0.3.
+    expect(formatUnit(0.25, 'ns')).toBe('0.25 ns');
+    expect(formatUnit(3200, 'mt-per-s')).toBe('3,200 MT/s');
+    expect(formatUnit(16, 'cycles')).toBe('16 cycles');
+    expect(formatUnit(8, 'count')).toBe('8');
+    expect(formatUnit(51.2, 'bytes-per-ns')).toBe('51.2 GB/s');
+    expect(formatUnit(4, 'per-ns')).toBe('4 per ns');
+  });
+});
+
+function span(
+  requestIndex: number,
+  level: SimSpan['level'],
+  startNs: number,
+  endNs: number,
+  kind: SimSpan['kind'] = 'level',
+): SimSpan {
+  return { endNs, kind, level, requestIndex, startNs };
+}
+
+describe('simulatedNsAt', () => {
+  it('scales wall time by a constant dilation', () => {
+    expect(simulatedNsAt(1_000, 50)).toBe(50);
+    expect(simulatedNsAt(2_000, 50)).toBe(100);
+  });
+
+  it('is zero for nonsense input rather than Infinity or NaN', () => {
+    expect(simulatedNsAt(-1, 50)).toBe(0);
+    expect(simulatedNsAt(1_000, 0)).toBe(0);
+  });
+});
+
+describe('windowOf', () => {
+  it('is the latest span end', () => {
+    expect(windowOf([span(0, 'l1', 0, 10), span(1, 'l2', 5, 40)])).toBe(40);
+  });
+
+  it('is zero when nothing was traced', () => {
+    expect(windowOf([])).toBe(0);
+  });
+});
+
+describe('levelLabel', () => {
+  it('names every level in words a reader knows', () => {
+    expect(levelLabel('l3')).toBe('L3 cache');
+    expect(levelLabel('memory')).toBe('Memory bus');
+  });
+});
 
 describe('formatDuration', () => {
   it('picks a unit that keeps the number readable', () => {

@@ -1,5 +1,12 @@
+import type { ParameterUnit } from '@/data';
+import type { LevelId, SimSpan } from '@/sim';
+
 const NS_PER_US = 1_000;
 const NS_PER_MS = 1_000_000;
+
+const KIB = 1024;
+const MIB = 1024 ** 2;
+const GIB = 1024 ** 3;
 
 /** Smallest and largest animation speeds, in simulated nanoseconds per second. */
 export const MIN_NS_PER_SECOND = 1;
@@ -29,6 +36,71 @@ export function formatPercent(fraction: number): string {
 
 export function formatCount(value: number): string {
   return value.toLocaleString('en-US');
+}
+
+export function formatBytes(bytes: number): string {
+  if (bytes >= GIB)
+    return `${trimUnit(bytes / GIB)} GiB`;
+  if (bytes >= MIB)
+    return `${trimUnit(bytes / MIB)} MiB`;
+  return `${trimUnit(bytes / KIB)} KiB`;
+}
+
+export function formatHz(hz: number): string {
+  if (hz >= 1e9)
+    return `${trimUnit(hz / 1e9)} GHz`;
+  if (hz >= 1e6)
+    return `${trimUnit(hz / 1e6)} MHz`;
+  return `${formatCount(hz)} Hz`;
+}
+
+/**
+ * One formatter per unit, so two call sites cannot render the same number two
+ * ways. A descriptor carries the unit and never a formatter.
+ */
+export function formatUnit(value: number, unit: ParameterUnit): string {
+  switch (unit) {
+    case 'bytes': return formatBytes(value);
+    case 'bytes-per-ns': return formatBandwidth(value);
+    case 'count': return formatCount(value);
+    case 'cycles': return `${formatCount(value)} cycles`;
+    case 'hz': return formatHz(value);
+    case 'mt-per-s': return `${formatCount(value)} MT/s`;
+    case 'ns': return `${value} ns`;
+    case 'per-ns': return `${trimUnit(value)} per ns`;
+  }
+}
+
+function trimUnit(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+const LEVEL_LABELS: Record<LevelId, string> = {
+  cpu: 'CPU core',
+  l1: 'L1 cache',
+  l2: 'L2 cache',
+  l3: 'L3 cache',
+  memory: 'Memory bus',
+};
+
+/** Human name for a level, for anywhere that shows the limiter. */
+export function levelLabel(id: LevelId): string {
+  return LEVEL_LABELS[id];
+}
+
+/** Simulated time reached after `elapsedMs` of playback at a constant rate. */
+export function simulatedNsAt(elapsedMs: number, nsPerSecond: number): number {
+  if (!(elapsedMs > 0) || !(nsPerSecond > 0))
+    return 0;
+  return (elapsedMs / 1000) * nsPerSecond;
+}
+
+/** Longest span end, which is how much simulated time there is to play. */
+export function windowOf(spans: readonly SimSpan[]): number {
+  let windowNs = 0;
+  for (const span of spans)
+    windowNs = Math.max(windowNs, span.endNs);
+  return windowNs;
 }
 
 /** Clamps a fraction to 0..1, so a control cannot drive a bar past its track. */

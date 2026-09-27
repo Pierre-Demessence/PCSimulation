@@ -8,12 +8,13 @@ export {
   formatCount,
   formatDuration,
   formatPercent,
+  levelLabel,
   logBar,
   MAX_NS_PER_SECOND,
   MIN_NS_PER_SECOND,
   nsPerSecondFromSlider,
+  simulatedNsAt,
   sliderFromNsPerSecond,
   TARGET_PLAY_SECONDS,
+  windowOf,
 } from './format';
-export { countActiveSpans, levelLabel, PipelineView, simulatedNsAt } from './pipeline';
-export type { PipelineData, PipelineLevelView } from './pipeline';

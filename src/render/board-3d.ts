@@ -493,7 +493,7 @@ export class BoardModel {
     // carries the utilisation colour, the hatch, the bottleneck tint and the
     // hover highlight, so none of those clues go missing on the part most likely
     // to be the bottleneck. The sticks are built on demand, because how many
-    // slots a rig populates changes with the rig. It stays near-dielectric on
+    // slots the memory populates changes with the build. It stays near-dielectric on
     // purpose: a high metalness would drink the utilisation colour, and that
     // colour has to stay legible.
     const material = new MeshStandardMaterial({ color: COLOURS.partFill, metalness: 0.08, roughness: 0.52 });

@@ -24,8 +24,8 @@ export interface HudData {
 
 /**
  * The strip that says what is on screen and how fast it is playing. Shared by
- * every view, so the two-dimensional board, the three-dimensional model and the
- * swimlane all describe the same run in the same words.
+ * both pictures, so the flat board and the 3D model describe the same run in
+ * the same words.
  *
  * Time runs at a constant, labelled dilation. A non-linear time axis is
  * deliberately rejected: it would decouple a token's speed on screen from its

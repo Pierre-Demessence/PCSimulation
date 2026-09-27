@@ -11,7 +11,7 @@ export interface FlowToken {
 /**
  * True when a request is resident at the given instant. Half-open at the end,
  * so a request is never in two places at once — and so this one predicate can
- * serve a count, a token list and the swimlane's layout alike.
+ * serve a count, a token list and a trace layout alike.
  */
 export function isResident(span: SimSpan, atNs: number): boolean {
   return atNs >= span.startNs && atNs < span.endNs;
@@ -47,7 +47,7 @@ export function tokensAt(
 }
 
 /** A fill climbs back up the hierarchy; everything else travels down it. */
-export function travelsBackUp(kind: SimSpan['kind']): boolean {
+function travelsBackUp(kind: SimSpan['kind']): boolean {
   return kind === 'fill';
 }
 

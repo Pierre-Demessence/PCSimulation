@@ -1,8 +1,9 @@
+import type { FlowToken } from './flow';
+
 import type { SimSpan } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
-
-import { tokensAt, travelsBackUp } from './flow';
+import { roundTripProgress, tokensAt } from './flow';
 
 function span(
   requestIndex: number,
@@ -45,11 +46,16 @@ describe('tokensAt', () => {
   });
 });
 
-describe('travelsBackUp', () => {
+describe('roundTripProgress', () => {
+  const token = (kind: SimSpan['kind'], progress: number): FlowToken => ({ kind, progress, requestIndex: 0 });
+
   it('sends only fills back toward the core', () => {
-    expect(travelsBackUp('fill')).toBe(true);
-    expect(travelsBackUp('dram')).toBe(false);
-    expect(travelsBackUp('level')).toBe(false);
-    expect(travelsBackUp('transfer')).toBe(false);
+    expect(roundTripProgress(token('fill', 0.25))).toBeCloseTo(0.75);
+    expect(roundTripProgress(token('level', 0.25))).toBeCloseTo(0.25);
+    expect(roundTripProgress(token('transfer', 0.25))).toBeCloseTo(0.25);
+  });
+
+  it('parks a DRAM wait where it is rather than drifting it along the wire', () => {
+    expect(roundTripProgress(token('dram', 0.25))).toBe(1);
   });
 });

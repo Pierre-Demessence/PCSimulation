@@ -1,4 +1,4 @@
-export { isResident, progressOf, roundTripProgress, tokensAt, traceProgress, travelsBackUp } from './flow';
+export { isResident, progressOf, roundTripProgress, tokensAt, traceProgress } from './flow';
 export type { FlowToken } from './flow';
 export {
   BOARD_HEIGHT_MM,
