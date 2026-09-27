@@ -7,8 +7,9 @@ import { boardLayout } from '@/board';
 import { findPreset, memorySpec, RIG_PRESETS, validateConfiguration } from '@/data';
 import { BoardModel, BoardView, fitNsPerSecond, formatCount, PipelineView, simulatedNsAt } from '@/render';
 import { simulate } from '@/sim';
-import { ControlPanel } from '@/ui';
+import { ControlPanel, mountWindows } from '@/ui';
 import { generateAccesses, mixedSpec, randomSpec, streamingSpec } from '@/workloads';
+import '@pierre/winkit/styles.css';
 import './styles.css';
 
 /** Large enough for steady-state numbers; only a slice is traced for the view. */
@@ -28,7 +29,8 @@ const modelCanvas = required<HTMLCanvasElement>('#model3d');
 const modelHudCanvas = required<HTMLCanvasElement>('#modelHud');
 const modelRoot = required<HTMLElement>('#model');
 const pipelineCanvas = required<HTMLCanvasElement>('#pipeline');
-const panelRoot = required<HTMLElement>('#panel');
+const uiRoot = required<HTMLElement>('#ui');
+const introBlock = required<HTMLElement>('#intro');
 
 function workloadSpec(kind: WorkloadKind): WorkloadSpec {
   const base = { accessCount: ACCESS_COUNT };
@@ -224,7 +226,7 @@ function tick(now: number): void {
   requestAnimationFrame(tick);
 }
 
-panel = new ControlPanel(panelRoot, {
+panel = new ControlPanel({
   onChange,
   onResetView: () => boardModel.resetCamera(),
   onRestart: () => {
@@ -233,6 +235,11 @@ panel = new ControlPanel(panelRoot, {
   },
   presets: RIG_PRESETS.map(preset => ({ id: preset.id, title: preset.title })),
 });
+
+// The app title and lede live at the top of the Controls window rather than
+// over the canvas, where they would collide with the HUD header.
+panel.controlsElement.prepend(introBlock);
+mountWindows(uiRoot, panel.controlsElement, panel.readoutsElement);
 
 applyViewMode();
 rebuild();

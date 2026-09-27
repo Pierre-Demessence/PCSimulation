@@ -115,8 +115,10 @@ function configureRange(input: HTMLInputElement, min: number, max: number, step:
  * "bandwidth" and "latency" separable rather than a single blurry "faster".
  */
 export class ControlPanel {
-  private readonly root: HTMLElement;
   private readonly options: PanelOptions;
+
+  /** Hosts the inputs and the warnings line; adopted into the Controls window. */
+  private readonly controlsHost = element('div', 'panel-controls');
 
   private readonly presetSelect = element('select', 'control');
   private readonly workloadSelect = element('select', 'control');
@@ -135,10 +137,19 @@ export class ControlPanel {
 
   private state: PanelState | null = null;
 
-  constructor(root: HTMLElement, options: PanelOptions) {
-    this.root = root;
+  constructor(options: PanelOptions) {
     this.options = options;
     this.build();
+  }
+
+  /** The inputs and warnings, for the Controls window. */
+  get controlsElement(): HTMLElement {
+    return this.controlsHost;
+  }
+
+  /** The readout cards, for the Readouts window. */
+  get readoutsElement(): HTMLElement {
+    return this.cards;
   }
 
   private build(): void {
@@ -223,7 +234,7 @@ export class ControlPanel {
 
     this.warnings.setAttribute('aria-live', 'polite');
 
-    this.root.append(controls, this.warnings, this.cards);
+    this.controlsHost.append(controls, this.warnings);
   }
 
   private get mtPerSecond(): number {

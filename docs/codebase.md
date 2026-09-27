@@ -33,10 +33,14 @@
   - `palette.ts` / `glyphs.ts` — the shared colours, the per-phase glyphs, the
     hatch and the utilisation thresholds, so every view speaks one language.
   - `format.ts` — the pure formatting and scale helpers, with no canvas.
-- `src/ui/` — the control panel and the readout cards (`panel.ts`).
+- `src/ui/` — the control panel and the readout cards (`panel.ts`), and the
+  floating windows that host them (`windows.tsx`, a Preact `WindowLayer` from
+  `@pierre/winkit`). `panel.ts` builds plain DOM and exposes it as two elements;
+  `windows.tsx` adopts those nodes into draggable windows over the canvas.
 - `src/main.ts` — wiring: state, re-simulation on change, the three views and
   the animation loop. Only the active view is on screen, and only it is drawn.
-- `src/styles.css` — the page and panel styling.
+- `src/styles.css` — the full-viewport stage, the intro block, and the winkit
+  window theming.
 - `index.html` — Vite HTML entry; `%APP_NAME%` is replaced from `brand.json`.
 - `vite.config.ts` / `vitest.config.ts` — build and test config; both share the `@/` alias.
 - `eslint.config.ts` — flat ESLint config.

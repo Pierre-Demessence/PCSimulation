@@ -6,6 +6,10 @@ import { defineConfig } from 'vite';
 const brand = JSON.parse(readFileSync(resolve(__dirname, 'brand.json'), 'utf8')) as { name: string };
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'preact',
+  },
   plugins: [
     {
       name: 'inject-brand',
