@@ -1,11 +1,31 @@
+export { addPart, completeBuild, emptyBuild, hasPart, missingParts } from './build';
+export type { Build } from './build';
+export { buildChecks } from './checks';
+export type { Check } from './checks';
 export { validateConfiguration } from './compat';
+export { buildLimits } from './limits';
+export type { Limit, LimitInput } from './limits';
+export { applyParameter, partDefinition, partDefinitions } from './parameters';
+export type {
+  ChoiceParameter,
+  CpuPart,
+  FlagsParameter,
+  Parameter,
+  ParameterApplication,
+  ParameterControl,
+  ParameterEffect,
+  ParameterUnit,
+  ParameterValue,
+  PartDefinition,
+  PartId,
+  RangeParameter,
+  SlotId,
+} from './parameters';
 export {
   BASELINE_CPU,
   CACHE_HIERARCHY,
-  findPreset,
+  CYCLES_PER_ISSUE,
   GIB,
   MEMORY_DEFAULTS,
   memorySpec,
-  RIG_PRESETS,
 } from './presets';
-export type { RigPreset } from './presets';

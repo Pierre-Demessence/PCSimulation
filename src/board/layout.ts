@@ -2,6 +2,8 @@ import type { BoardLayout, BoardLink, BoardPart, BoardPoint, BoardRect, BoardSeg
 
 import type { HardwareConfig } from '@/sim';
 
+import { cacheNote, formatHz, memoryIdentity, plural } from './labels';
+
 /** ATX: 305 mm by 244 mm, seen from above with the rear I/O along the top. */
 export const BOARD_WIDTH_MM = 305;
 export const BOARD_HEIGHT_MM = 244;
@@ -28,7 +30,7 @@ const PARTS: readonly BoardPart[] = [
     explodedRect: { hMm: 60, wMm: 60, xMm: 12, yMm: 20 },
     id: 'cpu',
     kind: 'cpu',
-    label: 'CPU package — the core and its three cache levels',
+    label: 'CPU package',
     levelId: 'cpu',
     short: 'CPU',
   },
@@ -37,7 +39,7 @@ const PARTS: readonly BoardPart[] = [
     explodedRect: { hMm: 32, wMm: 32, xMm: 86, yMm: 34 },
     id: 'l1',
     kind: 'cache',
-    label: 'L1 cache — 32 KiB per core, 1 ns lookup',
+    label: 'L1 cache',
     levelId: 'l1',
     short: 'L1',
   },
@@ -46,7 +48,7 @@ const PARTS: readonly BoardPart[] = [
     explodedRect: { hMm: 40, wMm: 40, xMm: 132, yMm: 30 },
     id: 'l2',
     kind: 'cache',
-    label: 'L2 cache — 512 KiB per core, 4 ns lookup',
+    label: 'L2 cache',
     levelId: 'l2',
     short: 'L2',
   },
@@ -55,7 +57,7 @@ const PARTS: readonly BoardPart[] = [
     explodedRect: { hMm: 46, wMm: 56, xMm: 186, yMm: 26 },
     id: 'l3',
     kind: 'cache',
-    label: 'L3 cache — 16 MiB shared, 15 ns lookup',
+    label: 'L3 cache',
     levelId: 'l3',
     short: 'L3',
   },
@@ -64,7 +66,7 @@ const PARTS: readonly BoardPart[] = [
     explodedRect: { hMm: 72, wMm: 42, xMm: 254, yMm: 20 },
     id: 'memory',
     kind: 'dimm',
-    label: 'Memory — DIMMs in the board\u2019s slots',
+    label: 'Memory',
     levelId: 'memory',
     short: 'RAM',
   },
@@ -127,16 +129,19 @@ const LINKS: readonly BoardLink[] = [
 ];
 
 /**
- * The parts the current rig actually populates. Slot count and population are
- * the rig's own numbers, so swapping to a four-channel board fills two more
- * strips — the picture follows the hardware rather than a fixed drawing.
+ * The parts the memory in this build actually populates. Slot count and
+ * population are the build's own numbers, so moving to a four-channel board
+ * fills two more strips — the picture follows the hardware rather than a fixed
+ * drawing.
  */
 export function boardLayout(config: HardwareConfig): BoardLayout {
   const occupied = Math.min(config.memory.channels, config.motherboard.dimmSlots);
-  const parts = PARTS.map(part =>
-    part.id === 'memory'
-      ? { ...part, strips: { count: config.motherboard.dimmSlots, occupied } }
-      : part);
+  const parts = PARTS.map((part) => {
+    const labelled = { ...part, label: labelFor(part, config) };
+    return part.id === 'memory'
+      ? { ...labelled, strips: { count: config.motherboard.dimmSlots, occupied } }
+      : labelled;
+  });
 
   return {
     heightMm: BOARD_HEIGHT_MM,
@@ -144,6 +149,29 @@ export function boardLayout(config: HardwareConfig): BoardLayout {
     parts,
     widthMm: BOARD_WIDTH_MM,
   };
+}
+
+/**
+ * A part's label is the machine's own description of itself, so every label that
+ * names a number is built from the spec. `PARTS`' own literals survive only for
+ * the parts the editor cannot reach, and describe what a part *is* rather than
+ * how big it is.
+ */
+function labelFor(part: BoardPart, config: HardwareConfig): string {
+  switch (part.id) {
+    case 'cpu':
+      return `CPU package — ${plural(config.cpu.cores, 'core')} at ${formatHz(config.cpu.clockHz)}, and its three cache levels`;
+    case 'l1':
+      return `L1 cache — ${cacheNote(config.caches.l1, 'per core')}`;
+    case 'l2':
+      return `L2 cache — ${cacheNote(config.caches.l2, 'per core')}`;
+    case 'l3':
+      return `L3 cache — ${cacheNote(config.caches.l3, 'shared')}`;
+    case 'memory':
+      return `Memory — ${memoryIdentity(config.memory)}`;
+    default:
+      return part.label;
+  }
 }
 
 function lerp(from: number, to: number, t: number): number {

@@ -2,20 +2,19 @@ import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
 
+import { memorySpec } from '@/data';
+import { GENERATION_PAIRS, testConfig } from '@/testing/build';
+
 import { validateConfiguration } from './compat';
-import { BASELINE_CPU, CACHE_HIERARCHY, findPreset, memorySpec, RIG_PRESETS } from './presets';
 
 function configWith(memory: MemorySpec): HardwareConfig {
-  const board = findPreset('rig-2019')?.motherboard;
-  if (board === undefined)
-    throw new Error('missing preset: rig-2019');
-  return { caches: CACHE_HIERARCHY, cpu: BASELINE_CPU, memory, motherboard: board };
+  return { ...testConfig(), memory };
 }
 
 describe('validateConfiguration', () => {
-  it('accepts every stock rig on its own board', () => {
-    for (const preset of RIG_PRESETS)
-      expect(validateConfiguration(preset.config)).toEqual([]);
+  it('accepts every generation on its own board', () => {
+    for (const { board, memory } of GENERATION_PAIRS)
+      expect(validateConfiguration(testConfig({ memory, motherboard: board }))).toEqual([]);
   });
 
   it('rejects a DIMM the board will not accept', () => {
@@ -44,8 +43,7 @@ describe('validateConfiguration', () => {
       maxMtPerSecond: 3200,
     };
     const problems = validateConfiguration({
-      caches: CACHE_HIERARCHY,
-      cpu: BASELINE_CPU,
+      ...testConfig(),
       memory: memorySpec('ddr4', 3200, 16, { channels: 3 }),
       motherboard: board,
     });

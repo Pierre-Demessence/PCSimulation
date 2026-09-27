@@ -2,7 +2,7 @@ import type { BoardLayout, BoardPart, BoardRect } from './types';
 
 import { describe, expect, it } from 'vitest';
 
-import { findPreset } from '@/data';
+import { testConfig } from '@/testing/build';
 
 import {
   BOARD_HEIGHT_MM,
@@ -16,11 +16,8 @@ import {
   rectsOverlap,
 } from './layout';
 
-function rig(id: string): BoardLayout {
-  const preset = findPreset(id);
-  if (preset === undefined)
-    throw new Error(`missing preset ${id}`);
-  return boardLayout(preset.config);
+function rig(): BoardLayout {
+  return boardLayout(testConfig());
 }
 
 function insideBoard(part: BoardPart, explode: number): boolean {
@@ -35,7 +32,7 @@ const CACHE_IDS = ['l1', 'l2', 'l3'] as const;
 
 describe('boardLayout', () => {
   it('keeps every part on the board at both ends of the slider', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     for (const part of layout.parts) {
       expect(insideBoard(part, 0), `${part.id} collapsed`).toBe(true);
       expect(insideBoard(part, 1), `${part.id} exploded`).toBe(true);
@@ -43,7 +40,7 @@ describe('boardLayout', () => {
   });
 
   it('keeps every part on the board all the way through the slider', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     for (const explode of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
       for (const part of layout.parts)
         expect(insideBoard(part, explode), `${part.id} at ${explode}`).toBe(true);
@@ -51,7 +48,7 @@ describe('boardLayout', () => {
   });
 
   it('leaves no part hidden behind another once exploded', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     const rects = layout.parts.map(part => ({ id: part.id, rect: partRect(part, 1) }));
 
     for (let a = 0; a < rects.length; a++) {
@@ -65,7 +62,7 @@ describe('boardLayout', () => {
   });
 
   it('nests the caches in the CPU package while collapsed, and lifts them out when exploded', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     const cpu = partById(layout, 'cpu');
     if (cpu === undefined)
       throw new Error('the layout has no CPU');
@@ -79,30 +76,22 @@ describe('boardLayout', () => {
     }
   });
 
-  it('takes the slot count and the population from the rig', () => {
-    const preset = findPreset('rig-2019');
-    if (preset === undefined)
-      throw new Error('missing preset rig-2019');
+  it('takes the slot count and the population from the memory spec', () => {
+    const config = testConfig();
 
-    expect(partById(rig('rig-2019'), 'memory')?.strips).toEqual({ count: 4, occupied: 2 });
+    expect(partById(rig(), 'memory')?.strips).toEqual({ count: 4, occupied: 2 });
 
-    // Both v0.1 rigs populate two of their four slots; a four-channel spec
-    // fills four, so the picture follows the hardware rather than the drawing.
-    const fourChannel = boardLayout({
-      ...preset.config,
-      memory: { ...preset.config.memory, channels: 4 },
-    });
+    // The fixture populates two of its four slots; a four-channel spec fills
+    // four, so the picture follows the hardware rather than the drawing.
+    const fourChannel = boardLayout({ ...config, memory: { ...config.memory, channels: 4 } });
     expect(partById(fourChannel, 'memory')?.strips).toEqual({ count: 4, occupied: 4 });
 
-    const slotless = boardLayout({
-      ...preset.config,
-      motherboard: { ...preset.config.motherboard, dimmSlots: 0 },
-    });
+    const slotless = boardLayout({ ...config, motherboard: { ...config.motherboard, dimmSlots: 0 } });
     expect(partById(slotless, 'memory')?.strips).toEqual({ count: 0, occupied: 0 });
   });
 
   it('clamps the explode position', () => {
-    const part = partById(rig('rig-2019'), 'memory');
+    const part = partById(rig(), 'memory');
     if (part === undefined)
       throw new Error('the layout has no memory');
     expect(partRect(part, -1)).toEqual(part.boardRect);
@@ -110,7 +99,7 @@ describe('boardLayout', () => {
   });
 
   it('picks the part on top when a cache sits on its package', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     expect(partAtPoint(layout, 0, 114, 58)?.id).toBe('l1');
     // The package's own name strip, above the cache plates.
     expect(partAtPoint(layout, 0, 122, 43)?.id).toBe('cpu');
@@ -119,7 +108,7 @@ describe('boardLayout', () => {
   });
 
   it('still finds a part under the pointer once the view is exploded', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     expect(partAtPoint(layout, 1, 99, 35)?.id).toBe('l1');
     expect(partAtPoint(layout, 1, 40, 48)?.id).toBe('cpu');
     expect(partAtPoint(layout, 1, 275, 50)?.id).toBe('memory');
@@ -159,7 +148,7 @@ describe('clipBetweenRects', () => {
 
 describe('linkSegment', () => {
   it('shows only the memory trace while the package is closed', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     const visible = layout.links
       .map(link => ({ id: link.id, segment: linkSegment(layout, 0, link) }))
       .filter(entry => entry.segment !== null)
@@ -169,20 +158,20 @@ describe('linkSegment', () => {
   });
 
   it('shows the whole chain once exploded', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     const visible = layout.links.filter(link => linkSegment(layout, 1, link) !== null);
 
     expect(visible.map(link => link.id)).toEqual(['cpu-l1', 'l1-l2', 'l2-l3', 'l3-memory']);
   });
 
   it('draws nothing for a link whose endpoints are missing', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     expect(linkSegment(layout, 1, { from: 'cpu', id: 'cpu-ghost', levelId: null, to: 'ghost' })).toBeNull();
     expect(linkSegment(layout, 1, { from: 'ghost', id: 'ghost-l1', levelId: null, to: 'l1' })).toBeNull();
   });
 
   it('draws the memory trace toward the DIMMs', () => {
-    const layout = rig('rig-2019');
+    const layout = rig();
     const link = layout.links.find(candidate => candidate.id === 'l3-memory');
     const memory = partById(layout, 'memory');
     if (link === undefined || memory === undefined)

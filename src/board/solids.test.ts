@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { findPreset } from '@/data';
+import { testConfig } from '@/testing/build';
 
 import { boardLayout, partById } from './layout';
 import { solidAt } from './solids';
 
 function part(id: string) {
-  const preset = findPreset('rig-2019');
-  if (preset === undefined)
-    throw new Error('missing preset rig-2019');
-  const found = partById(boardLayout(preset.config), id);
+  const found = partById(boardLayout(testConfig()), id);
   if (found === undefined)
     throw new Error(`the layout has no ${id}`);
   return found;
@@ -42,11 +39,7 @@ describe('solidAt', () => {
   });
 
   it('rests every part on something when the view is assembled', () => {
-    const preset = findPreset('rig-2019');
-    if (preset === undefined)
-      throw new Error('missing preset rig-2019');
-
-    const layout = boardLayout(preset.config);
+    const layout = boardLayout(testConfig());
     const cpuTop = solidAt(part('cpu'), 0).topMm;
 
     // Nothing hovers. A part stands on the board, except a cache plate, which
@@ -58,11 +51,7 @@ describe('solidAt', () => {
   });
 
   it('lifts everything once exploded, except the package it all rises from', () => {
-    const preset = findPreset('rig-2019');
-    if (preset === undefined)
-      throw new Error('missing preset rig-2019');
-
-    for (const candidate of boardLayout(preset.config).parts) {
+    for (const candidate of boardLayout(testConfig()).parts) {
       const assembled = solidAt(candidate, 0).bottomMm;
       const exploded = solidAt(candidate, 1).bottomMm;
       if (candidate.id === 'cpu') {
