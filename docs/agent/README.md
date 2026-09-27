@@ -13,7 +13,13 @@ Concise instructions for AI agents working in this repository.
 
 - `src/sim/` — the simulation core. Never import DOM or browser APIs here.
 - `src/workloads/` — seeded access generators. Determinism is load-bearing.
-- `src/data/presets.ts` — rig presets and the core's in-flight miss budget.
+- `src/data/parameters.ts` — every part's `read`/`write` is typed over a
+  `Partial<HardwareConfig>`, so an absent part is expressible and `read` returns
+  null for it.
+- `src/data/presets.ts` — the shared constants every part is built from, and the
+  core's in-flight miss budget.
+- `src/sheet/` — DOM-free. The model owns every string, so add no help text and
+  no formatter of your own here; `src/ui/sheet.ts` owns only the elements.
 - `docs/plans/` — the active feature plan.
 
 ## Invariants
@@ -28,5 +34,9 @@ Concise instructions for AI agents working in this repository.
 - **Determinism.** A fixed seed must produce the identical access stream and
   the identical result; equal timestamps in the event queue break by insertion
   order.
+- **A build is never completed for the reader.** Nothing is filled in that the
+  user did not add: a missing part stays missing, `simulate` is reached only
+  through `completeBuild`, and the sheet says what to add rather than inventing a
+  part.
 - **The core stays DOM-free** so it can move into a Web Worker unchanged.
 - Run the static pipeline (lint + test + build) before considering work done.

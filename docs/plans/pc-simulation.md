@@ -141,7 +141,7 @@ leaving the CPU side as the limiter.
 - THE SYSTEM SHALL let the user vary a single parameter (only CL, only
   frequency, only channel count) while holding the others constant.
 - IF a component is incompatible with the motherboard, THEN THE SYSTEM SHALL
-  reject the configuration and explain which rule it violates.
+  keep simulating it and explain which rule it violates.
 - THE SYSTEM SHALL keep the simulation core free of DOM and browser APIs.
 
 ### Presentation

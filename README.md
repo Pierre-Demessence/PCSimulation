@@ -8,15 +8,17 @@ software running on top.
 The whole point is one loop: run a workload, find the saturated link, swap a
 part, and watch the bottleneck move somewhere else.
 
-## What it already shows
+## What it shows
 
-The same 200,000-access workload on three rigs that differ only in memory:
+A build is assembled part by part in the panel: a part is "Not added" until you
+add it and fill in its values. This table is therefore three memory choices on
+one machine, not three computers — the same 200,000-access workload runs on each:
 
-| Rig | Streaming | Random (pointer chase) |
+| Memory | Streaming | Random (pointer chase) |
 | --- | --- | --- |
-| 2012 · DDR3-1600 CL9 | 500 µs @ 25.6 GB/s | 18,669 µs |
-| 2019 · DDR4-3200 CL16 | 250 µs @ 51.2 GB/s | 18,180 µs |
-| 2024 · DDR5-5600 CL36 | 143 µs @ 89.5 GB/s | 18,634 µs |
+| DDR3-1600 CL9 | 500 µs @ 25.6 GB/s | 18,669 µs |
+| DDR4-3200 CL16 | 250 µs @ 51.2 GB/s | 18,180 µs |
+| DDR5-5600 CL36 | 143 µs @ 89.5 GB/s | 18,634 µs |
 
 Streaming scales with bandwidth: DDR5 finishes 3.5× faster than DDR3. The
 pointer chase ignores bandwidth completely — all three generations land within
@@ -24,25 +26,28 @@ pointer chase ignores bandwidth completely — all three generations land within
 part. The very same DDR5 DIMM delivers 89.5 GB/s or 0.7 GB/s depending only on
 the access pattern.
 
-## Three views of the same run
+## Two faces of the same build
 
-The **Model** view draws the machine as an object you can orbit, pan and zoom —
-the CPU package with its three cache levels, the memory sticks standing in their
-slots, the card and drive slots, and the traces between them. Each part has its
-own height, so a DIMM stick does not look like an M.2 slot.
+The **build sheet** is the default face: a text document that lists every part
+and its characteristics, derives the limits the parts impose on each other,
+states the board's rules as met or not met, and reports what the run did. Its
+controls sit in a sidebar beside it.
 
-The **Board** view is the same machine drawn flat, seen from above. The **Flow**
-view is the same data as one row per level, with utilisation bars and a running
-count of requests in flight; it is the one that carries no meaning in colour at
-all.
+The **visualisation** draws the same machine. The **Model** picture is an object
+you can orbit, pan and zoom — the CPU package with its three cache levels, the
+memory sticks standing in their slots, the card and drive slots, and the traces
+between them. Each part has its own height, so a DIMM stick does not look like
+an M.2 slot. The **Board** picture is the same machine drawn flat, seen from
+above.
 
-One slider, **Explode**, pulls the parts apart. In the flat view they separate
+One slider, **Explode**, pulls the parts apart. In the flat board they separate
 until a cache buried inside the CPU package becomes a readable block; in the 3D
 model they lift off the board and the traces follow them, so you can see what is
 wired to what.
 
-The readout cards below the picture report every number, each with a tooltip
-saying what it means and what unit it is in.
+The readout cards report every number, each with a tooltip saying what it means
+and what unit it is in. The build sheet states the same figures in prose, from
+the same run.
 
 ## Getting started
 

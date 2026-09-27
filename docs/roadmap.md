@@ -1,24 +1,23 @@
 # Roadmap
 
 Living document: what is planned, in what order, and what is deliberately out
-of scope. The current focus is the [v0.1 plan](plans/pc-simulation.md) —
-memory path only (CPU + RAM + motherboard).
+of scope. The current focus is the [build-sheet plan](plans/build-sheet.md) —
+S2 to S4, on top of the v0.1 memory path (CPU + RAM + motherboard).
 
 ## Where we are
 
 v0.1's simulation core and its presentation layer are built: the discrete-event
-memory path, the workload profiles, the rig presets, the bottleneck classifier,
-and the animated data-path view with its isolating controls. Lint, tests and
-build are green. See the [v0.1 plan](plans/pc-simulation.md).
+memory path, the workload profiles, the bottleneck classifier, and the build
+sheet that reports a build in words. Lint, tests and build are green. See the
+[v0.1 plan](plans/pc-simulation.md).
 
-The machine is also drawn as a picture now, and as an object: the 3D model is
-the default view, with the flat board and the swimlane beside it. See the
-[board view plan](plans/done/board-view.md).
+The visualisation face draws the machine as a picture: the 3D model, or the same
+machine seen flat. See the [board view plan](plans/done/board-view.md).
 
 ## Presentation waves
 
-The view is a picture of the machine, not a table of numbers. Each wave makes the
-picture truer to the object and easier to read.
+The visualisation is a picture of the machine, not a table of numbers. Each wave
+makes the picture truer to the object and easier to read.
 
 | Wave | Adds | Status |
 | --- | --- | --- |
@@ -38,6 +37,52 @@ until it can demonstrate a bottleneck *migrating* as a part is swapped.
 | v0.3 | Storage (HDD / SATA SSD / NVMe) | Contrasts bandwidth-bound loads (game level streaming: SATA ~550 MB/s vs NVMe ~7 GB/s) against latency-bound ones (OS boot: HDD seek ~8 ms vs NVMe ~20–50 µs). Same lesson as RAM, and far larger in magnitude (HDD seek ~8 ms vs a full DRAM access of ~100 ns — nearly 5 orders of magnitude). |
 | v0.4 | PSU + thermals | Introduces budgets and a feedback loop: power → heat → thermal cap → lower boost clock → lower compute rate. Also teaches a *negative* lesson — a bigger PSU makes nothing faster. |
 
+## Build editor wave
+
+The project is becoming a build tool as well as a picture of a machine. Instead of
+editing the fixed parts of the memory path, the reader assembles a build: each
+part is "Not added" until it is added, and today every part is entered by hand.
+A catalogue of real parts is the mechanism that replaces typing the numbers —
+see [component customization](plans/component-customization.md), whose W2 owns
+it. The tool answers two separate questions:
+
+- **Does this work at all?** Compatibility: memory generation and DIMM count
+  today, with the socket, lane and wattage budgets arriving with S2–S4.
+- **What limits it?** The bottleneck, which the simulation already classifies.
+
+Those are different axes. The board's caps warn and the run proceeds
+(`src/data/compat.ts`); the sheet states each rule as met or not met and never
+blocks the run, because a DIMM outside the board's spec is the lesson.
+
+S1 of [the build-sheet plan](plans/build-sheet.md) ships the assembly, the
+limits and the first verdict — `Build` as a partial core, the part picker,
+`buildLimits` and `buildChecks`, and the sheet over the memory path. Its wave
+table carries S2–S4: the parts the model does not reach (GPU facts, the PCIe lane
+budget), storage (interface ceilings, M.2 and SATA topology, lane splitting), and
+power (connectors and a wattage budget). Two things the plan deliberately does
+not do, and that stay deferred here:
+
+- **Multiplicity.** A `Build` carries one part per kind, exactly as
+  `HardwareConfig` does, so four DIMM *modules*, two drives and a card beside the
+  GPU are not expressible; the channel count stands in for the stick count, as it
+  does today.
+- **A per-instance identity.** The split between a user-facing part and a simulated
+  slot already exists (`BoardPart.id`/`kind` against `levelId`,
+  `src/board/layout.ts@23-116`); multiplicity would need an identity above the
+  part, which neither plan adds.
+
+### Deferred within the build editor wave
+
+- Several parts of one kind — four DIMM modules, two drives — which needs the
+  per-instance identity above the part, not just a picker.
+- Per-DIMM simulation: a DIMM's own rank and bank timing, rather than one memory
+  level with a `channels` count. Multiplicity makes it visible; it does not make it
+  trivial.
+- Case, cooler and fan parts with the physical fit rules they carry (card length,
+  radiator size). The first cut of the build editor is electrical and logical, not
+  spatial.
+- Importing a build from pasted part names.
+
 ## Deferred within the memory wave
 
 Recorded here so they are not lost when the v0.1 plan is archived.
@@ -54,12 +99,24 @@ Recorded here so they are not lost when the v0.1 plan is archived.
 - Memory channel topology beyond the basic case: how slot population choices
   silently halve bandwidth — a high-value beginner demo.
 - NUMA / dual-socket layouts.
-- Full-system presets spanning CPU + GPU + storage, once all waves ship.
 
-## Deferred within the GPU and storage waves
+## Recorded as static rules
 
-- PCIe lane splitting: filling M.2 slots drops the GPU to ×8 (v0.2).
-- Chipset uplink (DMI) saturation when many chipset devices are active (v0.3).
+Both are true from a build's parts alone, so they need no simulation: when their
+waves arrive the sheet states each as a limit or a check, and no run demonstrates
+it. The v0.2 GPU and v0.3 storage simulations remain deferred.
+
+- PCIe lane splitting: filling M.2 slots drops the GPU to ×8.
+- Chipset uplink (DMI) saturation when many chipset devices are active.
+
+## Deferred within component customization
+
+- Sharing a build as a URL, so a build can be linked rather than described. See
+  [plans/component-customization.md](plans/component-customization.md).
+- Component templates for GPU, storage and PSU parts, which arrive with their
+  own waves above.
+- Several parts of one kind, and the compatibility verdict that needs — the
+  assembly is the build editor wave above; multiplicity stays deferred there.
 
 ## Deferred presentation work
 
@@ -68,10 +125,6 @@ Recorded here so they are not lost when the v0.1 plan is archived.
   view; the 3D model has no de-confliction yet.
 - Loading three.js lazily, so the first paint does not wait for the whole 3D
   engine. The production bundle is about 157 kB gzipped, nearly all of it three.
-- Narrow-canvas guards in the swimlane view: its header and its per-row figures
-  are measured against nothing, so below roughly 480 px the title, the
-  percentage and the BOTTLENECK tag can overlap. The two board views now trim
-  every line to their canvas.
 - The delta against the previous run in the readout.
 - Headless batch comparison in a Web Worker, so a slider change never waits.
 - Precomputing the per-frame labels instead of formatting them every frame.

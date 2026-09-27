@@ -5,17 +5,22 @@ Product-level feature list. One line per feature: name — description — owner
 - **Discrete-event memory path** — walks L1 → L2 → L3 → the memory channel per
   access, with queueing, merged misses and outstanding-miss limits. — owner: Pierre
 - **Workload profiles** — seeded streaming, dependent random and mixed access
-  streams, so two rigs are always compared on identical work. — owner: Pierre
-- **Rig presets** — 2012 (DDR3-1600 CL9), 2019 (DDR4-3200 CL16) and 2024
-  (DDR5-5600 CL36) machines differing only in memory. — owner: Pierre
+  streams, so two builds are always compared on identical work. — owner: Pierre
+- **Assembled builds** — a build holds one part per kind (CPU, memory,
+  motherboard), each "Not added" until the reader adds it and fills in its
+  values; a part that is absent contributes no limits of its own, and until all
+  three are in there is no run and no verdict — the sheet says what to add.
+  — owner: Pierre
 - **Bottleneck classification** — reports per-resource utilisation, then labels
   the run resource-bound (naming the saturated part) or latency-bound (naming
   the dependency chain). — owner: Pierre
-- **Motherboard compatibility** — refuses a DIMM the board will not accept and
-  explains which rule it broke. — owner: Pierre
+- **Motherboard compatibility** — checks a DIMM against the board and explains
+  which rule it broke. A part outside the board's spec is still simulated: the
+  comparison is the lesson, so nothing is blocked. — owner: Pierre
 - **Results readout** — cards for time to finish, achieved bandwidth, mean
   latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
-  with a tooltip stating what it means and its unit. — owner: Pierre
+  with a tooltip stating what it means and its unit. The build sheet restates the
+  same figures in prose, from the same run. — owner: Pierre
 - **ATX placement** — every part sits where it would on a real ATX board: the
   rear I/O on the left edge level with the socket, the DIMM bank beside the
   socket with the card slot running across the board below it, the chipset low
@@ -25,28 +30,41 @@ Product-level feature list. One line per feature: name — description — owner
 - **Part silhouettes** — a socket frame around the package, a heatsink on the
   chipset, an I/O bracket and a cooler on the card, and a screw tab on the M.2
   stick, so each kind is recognisable from its shape alone. — owner: Pierre
+- **Build sheet** — the default face: a text document for the current build,
+  listing every part and each of its characteristics with what reads it,
+  deriving the ceilings (rates, where the tightest wins) and floors (delays,
+  which add up) the parts impose on each other, stating the board's rules as met
+  or not met, and reporting the run's figures in prose. — owner: Pierre
+- **Honest about the unmodelled** — a part the simulation does not reach (the
+  card, the M.2 slot, the chipset, the drives, the power delivery) is listed with
+  the facts it has and with no utilisation and no verdict, rather than given a
+  number the run never produced. — owner: Pierre
 - **3D model view** — the machine as an object you can orbit, pan and zoom,
   with each part drawn at its own height so a DIMM stick and an M.2 slot do not
-  look alike. The default view. — owner: Pierre
+  look alike. The visualisation's default picture. — owner: Pierre
 - **Board view** — the same machine drawn flat, seen from above: the parts where
   they sit on the motherboard, the CPU package with its three cache levels
   inside it, the DIMM slots drawn as strips, and the traces between them. — owner: Pierre
 - **Explode control** — one slider that pulls the parts apart — in the 3D model
   they lift off the board, and the traces follow them, so pulling the view apart
   shows what is wired to what. — owner: Pierre
-- **View switch** — 3D model, flat board, or swimlane; only the active one is
-  drawn. — owner: Pierre
-- **Animated data path (the Flow view)** — a Canvas 2D view of the hierarchy
-  where each level shows its utilisation, a log-scaled accumulator and how many
-  requests are in flight, with glyphs travelling down as misses and back up as
-  fills. This is the secondary view, and the one that carries no meaning in
-  colour at all. — owner: Pierre
+- **Face switch** — the build sheet or the visualisation; only the active face is
+  drawn, and inside the visualisation only the active picture (the 3D model or
+  the flat board). — owner: Pierre
 - **Saturated-resource tagging** — the busiest resource is tagged three ways at
   once (colour, hatch density and the word BOTTLENECK), so the meaning never
   rests on colour alone. — owner: Pierre
-- **Isolating controls** — memory speed and CAS latency are dialled
-  independently, with the rest of the rig fixed, so bandwidth and latency can
-  be told apart. — owner: Pierre
+- **Per-component editing** — every characteristic of every part is editable on
+  its own, one at a time: the CPU's clock and core count and all three of its
+  cache levels, the DIMM's generation, speed, CAS latency, channel count,
+  capacity and access overhead, and the board's slots and caps. Everything else
+  stays fixed, so a bottleneck is attributable. — owner: Pierre
+- **Perfectly honest knobs** — each characteristic says in words what reads it:
+  that it moves the numbers, that a rule checks it against the board, or that
+  nothing reads it yet. — owner: Pierre
+- **A part describes itself** — the label each part carries on the board is
+  generated from its current values, so an edited build cannot leave a stale
+  number on a part. — owner: Pierre
 - **Playback control** — a labelled constant dilation ("1 real second = N
   simulated") and a logarithmic speed slider, so no axis lies about magnitude.
   — owner: Pierre
