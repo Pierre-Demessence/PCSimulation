@@ -1,13 +1,14 @@
-import type { BoardData, PipelineData } from '@/render';
+import type { BoardData } from '@/render';
 
-import type { HardwareConfig, MemorySpec } from '@/sim';
+import type { SimResult } from '@/sim';
 import type { PanelState } from '@/ui';
 import type { WorkloadKind, WorkloadSpec } from '@/workloads';
 import { boardLayout } from '@/board';
-import { findPreset, memorySpec, RIG_PRESETS, validateConfiguration } from '@/data';
-import { BoardModel, BoardView, fitNsPerSecond, formatCount, PipelineView, simulatedNsAt } from '@/render';
+import { completeBuild, emptyBuild, missingParts, partDefinitions, validateConfiguration } from '@/data';
+import { BoardModel, BoardView, fitNsPerSecond, formatCount, simulatedNsAt, windowOf } from '@/render';
+import { buildSheet } from '@/sheet';
 import { simulate } from '@/sim';
-import { ControlPanel, mountWindows } from '@/ui';
+import { ControlPanel, mountWindows, SheetView } from '@/ui';
 import { generateAccesses, mixedSpec, randomSpec, streamingSpec } from '@/workloads';
 import '@pierre/winkit/styles.css';
 import './styles.css';
@@ -28,7 +29,7 @@ const boardCanvas = required<HTMLCanvasElement>('#board');
 const modelCanvas = required<HTMLCanvasElement>('#model3d');
 const modelHudCanvas = required<HTMLCanvasElement>('#modelHud');
 const modelRoot = required<HTMLElement>('#model');
-const pipelineCanvas = required<HTMLCanvasElement>('#pipeline');
+const sheetRoot = required<HTMLElement>('#sheet');
 const uiRoot = required<HTMLElement>('#ui');
 const introBlock = required<HTMLElement>('#intro');
 
@@ -43,36 +44,57 @@ function workloadSpec(kind: WorkloadKind): WorkloadSpec {
 
 const boardModel = new BoardModel(modelCanvas, modelHudCanvas);
 const boardView = new BoardView(boardCanvas);
-const view = new PipelineView(pipelineCanvas);
 let panel: ControlPanel | null = null;
+let sheet: SheetView | null = null;
+let buildDock: HTMLElement | null = null;
 
+// A build starts empty, so the sheet is the face that opens: it says what to add,
+// where the picture would have nothing to draw.
 let state: PanelState = {
-  // Assembled by default: the board opens as a board, with Explode as the tool
-  // that pulls it apart, not as the state you are dropped into.
+  build: emptyBuild(),
+  characteristic: 'clockHz',
   explode: 0,
-  isolating: { casLatency: 16, mtPerSecond: 3200 },
   nsPerSecond: 40,
+  origin: {},
+  part: 'cpu',
   playing: true,
-  presetId: 'rig-2019',
-  view: 'model',
+  view: 'sheet',
+  visualKind: 'model',
   workloadKind: 'streaming',
 };
 
 let windowNs = 0;
 let playedMs = 0;
 let lastFrameMs = performance.now();
-let fitKey = '';
+/**
+ * Set when the reader picks a different machine or workload. A new rig has a
+ * different time scale — a dependent chase runs about a hundred times longer
+ * than a stream — so the playback speed is refitted. It is decided where the
+ * event is known and applied in `rebuild`, because the window a fit needs only
+ * exists after a run. Editing a characteristic must not re-fit.
+ */
+let refitPlayback = true;
 let pendingRebuild: number | undefined;
 let boardData: BoardData | null = null;
 
 /** Milliseconds to wait after the last slider input before re-simulating. */
 const REBUILD_DEBOUNCE_MS = 160;
 
-/** Only the active view is on screen; each keeps its own canvas. */
+/** Only the active face is on screen, and only its picture is drawn. */
 function applyViewMode(): void {
-  modelRoot.hidden = state.view !== 'model';
-  boardCanvas.hidden = state.view !== 'board';
-  pipelineCanvas.hidden = state.view !== 'flow';
+  const sheetUp = state.view === 'sheet';
+
+  sheetRoot.hidden = !sheetUp;
+  uiRoot.hidden = sheetUp;
+  modelRoot.hidden = sheetUp || state.visualKind !== 'model';
+  boardCanvas.hidden = sheetUp || state.visualKind !== 'board';
+
+  // One set of build controls, relocated rather than duplicated: they follow the
+  // reader to the sheet, and wait in the Controls window when the picture is up.
+  if (panel !== null) {
+    const host = sheetUp && sheet !== null ? sheet.sidebar : buildDock;
+    host?.append(panel.buildControlsElement);
+  }
 }
 
 /**
@@ -87,15 +109,11 @@ function publishBoard(): void {
   boardView.setData(data);
 }
 
-/** The DIMM after the sliders have had their say; the rest of the rig is fixed. */
-function currentMemory(): MemorySpec | null {
-  const preset = findPreset(state.presetId);
-  if (preset === undefined)
-    return null;
-  return memorySpec(preset.memory.generation, state.isolating.mtPerSecond, state.isolating.casLatency, {
-    capacityBytes: preset.memory.capacityBytes,
-    channels: preset.memory.channels,
-  });
+/** What the picture calls this run: the workload and how many parts it has. */
+function buildLabel(): string {
+  const total = partDefinitions().length;
+  const present = total - missingParts(state.build).length;
+  return `${state.workloadKind} · ${present} of ${total} parts`;
 }
 
 function rebuild(): void {
@@ -104,58 +122,52 @@ function rebuild(): void {
     pendingRebuild = undefined;
   }
 
-  const preset = findPreset(state.presetId);
-  const memory = currentMemory();
-  if (preset === undefined || memory === null)
-    return;
-
-  const config: HardwareConfig = { ...preset.config, memory };
-
-  const result = simulate(config, generateAccesses(workloadSpec(state.workloadKind)), {
-    traceRequests: TRACE_REQUESTS,
-  });
-
-  windowNs = PipelineView.windowOf(result.spans);
-  const title = `${preset.title} — ${state.workloadKind}`;
-  const subtitle = `${preset.title} · ${formatCount(ACCESS_COUNT)} accesses, first ${TRACE_REQUESTS} traced`;
-
-  const data: PipelineData = {
-    bottleneckId: result.bottleneckId,
-    classification: result.classification,
-    levels: result.resources.map(resource => ({
-      accesses: resource.accesses,
-      busyNs: resource.busyNs,
-      id: resource.id,
-      role: resource.role,
-      utilisation: resource.utilisation,
-    })),
-    spans: result.spans,
-    subtitle,
-    title,
-    windowNs,
-  };
-  view.setData(data);
-
-  boardData = {
-    explode: state.explode,
-    layout: boardLayout(config),
-    result,
-    subtitle,
-    title,
-    windowNs,
-  };
-  publishBoard();
-
-  // A new rig or workload has a different time scale — a dependent chase runs
-  // about a hundred times longer than a stream — so refit the playback speed
-  // rather than crawl or blur.
-  const key = `${state.presetId}|${state.workloadKind}`;
-  if (key !== fitKey) {
-    fitKey = key;
-    state = { ...state, nsPerSecond: fitNsPerSecond(windowNs) };
+  const config = completeBuild(state.build);
+  let result: SimResult | null = null;
+  if (config !== null) {
+    result = simulate(config, generateAccesses(workloadSpec(state.workloadKind)), {
+      traceRequests: TRACE_REQUESTS,
+    });
   }
 
-  panel?.update(state, result, memory, validateConfiguration(config));
+  const title = buildLabel();
+  const subtitle = `${title} · ${formatCount(ACCESS_COUNT)} accesses, first ${TRACE_REQUESTS} traced`;
+
+  // A build missing a part has no run and so no picture; the sheet names what is
+  // missing rather than the view drawing a machine nobody assembled.
+  if (config === null || result === null) {
+    windowNs = 0;
+    boardData = null;
+  }
+  else {
+    windowNs = windowOf(result.spans);
+    boardData = {
+      explode: state.explode,
+      layout: boardLayout(config),
+      result,
+      subtitle,
+      title,
+      windowNs,
+    };
+    publishBoard();
+  }
+
+  // A new workload, or a part appearing, has a different time scale — a dependent
+  // chase runs about a hundred times longer than a stream — so refit the playback
+  // speed rather than crawl or blur.
+  if (refitPlayback) {
+    refitPlayback = false;
+    if (windowNs > 0)
+      state = { ...state, nsPerSecond: fitNsPerSecond(windowNs) };
+  }
+
+  panel?.update(state, result, config === null ? [] : validateConfiguration(config));
+  sheet?.update(buildSheet({
+    build: state.build,
+    origin: state.origin,
+    result,
+    workload: state.workloadKind,
+  }));
   playedMs = 0;
   lastFrameMs = performance.now();
 }
@@ -185,23 +197,30 @@ function onChange(patch: Partial<PanelState>): void {
   // when nothing needs re-simulating.
   panel?.syncState(state);
 
-  // Neither of these touches the simulation, so the picture just updates.
-  if (patch.view !== undefined || patch.explode !== undefined) {
+  // None of these touches the simulation, so the picture just updates.
+  if (patch.view !== undefined || patch.visualKind !== undefined || patch.explode !== undefined) {
     applyViewMode();
     publishBoard();
   }
 
-  if (patch.presetId !== undefined || patch.workloadKind !== undefined) {
+  // Choosing a component or a characteristic moves no number.
+  if (patch.part !== undefined || patch.characteristic !== undefined)
+    return;
+
+  // A part appearing changes how long the run takes, so it re-fits at once.
+  const partAdded = patch.build !== undefined
+    && missingParts(previous.build).length !== missingParts(state.build).length;
+
+  // A new workload has a different time scale, so it re-fits at once too.
+  if (patch.workloadKind !== undefined || partAdded) {
+    refitPlayback = true;
     rebuild();
     return;
   }
 
-  if (patch.isolating !== undefined) {
-    const memory = currentMemory();
-    if (memory !== null)
-      panel?.showReadouts(memory);
+  // An edited characteristic re-runs, but only once the reader stops dragging.
+  if (patch.build !== undefined)
     scheduleRebuild();
-  }
 }
 
 function tick(now: number): void {
@@ -217,12 +236,12 @@ function tick(now: number): void {
     simulatedNs = 0;
   }
 
-  if (state.view === 'model')
-    boardModel.render(simulatedNs, state.nsPerSecond);
-  else if (state.view === 'board')
-    boardView.render(simulatedNs, state.nsPerSecond);
-  else
-    view.render(simulatedNs, state.nsPerSecond);
+  if (state.view === 'visual' && boardData !== null) {
+    if (state.visualKind === 'model')
+      boardModel.render(simulatedNs, state.nsPerSecond);
+    else
+      boardView.render(simulatedNs, state.nsPerSecond);
+  }
   requestAnimationFrame(tick);
 }
 
@@ -233,13 +252,15 @@ panel = new ControlPanel({
     playedMs = 0;
     lastFrameMs = performance.now();
   },
-  presets: RIG_PRESETS.map(preset => ({ id: preset.id, title: preset.title })),
 });
 
-// The app title and lede live at the top of the Controls window rather than
-// over the canvas, where they would collide with the HUD header.
-panel.controlsElement.prepend(introBlock);
-mountWindows(uiRoot, panel.controlsElement, panel.readoutsElement);
+// The app title and lede travel with the build controls rather than sitting over
+// the canvas, where they would collide with the HUD header.
+panel.buildControlsElement.prepend(introBlock);
+mountWindows(uiRoot, panel.pictureControlsElement, panel.readoutsElement);
+
+buildDock = required<HTMLElement>('#controls-dock');
+sheet = new SheetView(sheetRoot);
 
 applyViewMode();
 rebuild();

@@ -21,11 +21,11 @@ function Adopt({ node }: { readonly node: HTMLElement }) {
 }
 
 interface MachineWindowsProps {
-  readonly controls: HTMLElement;
+  readonly picture: HTMLElement;
   readonly readouts: HTMLElement;
 }
 
-function MachineWindows({ controls, readouts }: MachineWindowsProps) {
+function MachineWindows({ picture, readouts }: MachineWindowsProps) {
   return (
     <WindowLayer>
       <Window
@@ -36,7 +36,10 @@ function MachineWindows({ controls, readouts }: MachineWindowsProps) {
         minSize={{ h: 200, w: 244 }}
         persistKey="pcsim.window.controls"
       >
-        <Adopt node={controls} />
+        <Adopt node={picture} />
+        {/* Where the build controls wait while the picture is the face on
+            screen; the sheet takes them when it has the reader instead. */}
+        <div id="controls-dock" class="window-dock" />
       </Window>
       <Window
         title="Readouts"
@@ -53,6 +56,6 @@ function MachineWindows({ controls, readouts }: MachineWindowsProps) {
 }
 
 /** Mounts the floating Controls and Readouts windows over the canvas. */
-export function mountWindows(root: HTMLElement, controls: HTMLElement, readouts: HTMLElement): void {
-  render(<MachineWindows controls={controls} readouts={readouts} />, root);
+export function mountWindows(root: HTMLElement, picture: HTMLElement, readouts: HTMLElement): void {
+  render(<MachineWindows picture={picture} readouts={readouts} />, root);
 }

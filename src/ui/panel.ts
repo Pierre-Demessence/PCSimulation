@@ -1,6 +1,8 @@
+import type { Build, PartId } from '@/data';
 import type { MemorySpec, SimResult } from '@/sim';
 import type { WorkloadKind } from '@/workloads';
 
+import { addPart, hasPart, partDefinitions } from '@/data';
 import { levelLabel } from '@/render';
 import {
   formatBandwidth,
@@ -13,45 +15,53 @@ import {
 import {
   aggregateBandwidthBytesPerNs,
   casLatencyNs,
-  fullAccessNs,
 } from '@/sim';
 
-export interface IsolatingControls {
-  /** Memory speed in MT/s — the bandwidth knob. */
-  readonly mtPerSecond: number;
-  /** CAS latency in memory clock cycles — the latency knob. */
-  readonly casLatency: number;
-}
+import { configureRange, element, slot } from './dom';
+import { PartEditor } from './editor';
 
-/** Which picture of the machine is on screen. */
-export type ViewMode = 'board' | 'flow' | 'model';
+/** The two faces of the machine: the document, and the picture. */
+export type ViewMode = 'sheet' | 'visual';
+
+/** Which picture the visualisation draws. */
+export type VisualKind = 'board' | 'model';
 
 export interface PanelState {
-  readonly presetId: string;
+  /** The build in progress, so the bench and the simulation read one source. */
+  readonly build: Build;
   readonly workloadKind: WorkloadKind;
   readonly nsPerSecond: number;
   readonly playing: boolean;
-  readonly isolating: IsolatingControls;
   readonly view: ViewMode;
+  readonly visualKind: VisualKind;
   /** 0 assembles the parts onto the board; 1 pulls them fully apart. */
   readonly explode: number;
+  /** Which part is on the bench, and which of its characteristics is varied. */
+  readonly part: PartId;
+  readonly characteristic: string;
+  /**
+   * The template each part was loaded from. Filled and read by the template
+   * catalogue: until a part is swapped, nothing has an origin.
+   */
+  readonly origin: Partial<Record<PartId, string>>;
 }
 
 export interface PanelOptions {
-  readonly presets: readonly { readonly id: string; readonly title: string }[];
   readonly onChange: (patch: Partial<PanelState>) => void;
   readonly onResetView: () => void;
   readonly onRestart: () => void;
 }
 
-const MT_RANGE = { max: 12_000, min: 1_600, step: 200 };
-const CL_RANGE = { max: 46, min: 8, step: 1 };
 const EXPLODE_RANGE = { max: 1, min: 0, step: 0.01 };
 
-const VIEW_LABELS: Record<ViewMode, string> = {
-  board: 'Board — flat, seen from above',
-  flow: 'Flow — one row per level',
-  model: 'Model — 3D, orbit and zoom',
+const FACE_LABELS: Record<ViewMode, string> = {
+  sheet: 'Build sheet — the machine in words',
+  visual: 'Visualisation — the machine in a picture',
+};
+
+const VISUAL_LABELS: Record<VisualKind, string> = {
+  board: 'Flat board — seen from above',
+  model: '3D model — orbit and zoom',
 };
 
 const WORKLOAD_LABELS: Record<WorkloadKind, string> = {
@@ -60,91 +70,53 @@ const WORKLOAD_LABELS: Record<WorkloadKind, string> = {
   streaming: 'Streaming — sequential lines',
 };
 
-function element<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className !== undefined)
-    node.className = className;
-  if (text !== undefined)
-    node.textContent = text;
-  return node;
-}
-
-function slot(label: string, control: HTMLElement, readout?: HTMLElement): HTMLElement {
-  const wrapper = element('div', 'slot');
-  const labelable = control instanceof HTMLInputElement || control instanceof HTMLSelectElement;
-
-  if (labelable && label.length > 0) {
-    // A real <label for> keeps the control's accessible name to its caption,
-    // and aria-describedby keeps the readout reachable without polluting it.
-    const id = `slot-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-    control.id = id;
-    const caption = element('label', 'slot-label', label);
-    caption.htmlFor = id;
-    wrapper.append(caption);
-
-    if (readout !== undefined) {
-      const readoutId = `${id}-readout`;
-      readout.id = readoutId;
-      control.setAttribute('aria-describedby', readoutId);
-    }
-  }
-  else {
-    wrapper.append(element('span', 'slot-label', label));
-  }
-
-  wrapper.append(control);
-  if (readout !== undefined)
-    wrapper.append(readout);
-  return wrapper;
-}
-
-function configureRange(input: HTMLInputElement, min: number, max: number, step: number): void {
-  input.type = 'range';
-  input.min = String(min);
-  input.max = String(max);
-  input.step = String(step);
-}
-
 /**
- * The controls and the readout cards. The two sliders exist to isolate one
- * variable at a time: fixing channel count and the other knob is what makes
- * "bandwidth" and "latency" separable rather than a single blurry "faster".
+ * The machine-level controls, the part bench, and the readout cards. The bench
+ * (`PartEditor`) exists to isolate one characteristic of one part at a time:
+ * holding every other value fixed is what makes a bottleneck attributable
+ * instead of one blurry "faster".
  */
 export class ControlPanel {
   private readonly options: PanelOptions;
 
-  /** Hosts the inputs and the warnings line; adopted into the Controls window. */
-  private readonly controlsHost = element('div', 'panel-controls');
+  /** Build-level controls, adopted into whichever face is on screen. */
+  private readonly buildHost = element('div', 'panel-build');
 
-  private readonly presetSelect = element('select', 'control');
+  /** Picture-only controls, which describe the drawing rather than the build. */
+  private readonly pictureHost = element('div', 'panel-picture');
+
+  private readonly faceSelect = element('select', 'control');
+  private readonly visualSelect = element('select', 'control');
   private readonly workloadSelect = element('select', 'control');
-  private readonly viewSelect = element('select', 'control');
+  private readonly pickers = new Map<PartId, HTMLSelectElement>();
   private readonly explodeSlider = element('input', 'control');
   private readonly explodeReadout = element('span', 'readout');
-  private readonly mtInput = element('input', 'control');
-  private readonly mtReadout = element('span', 'readout');
-  private readonly clSlider = element('input', 'control');
-  private readonly clReadout = element('span', 'readout');
   private readonly playbackSlider = element('input', 'control');
   private readonly playbackReadout = element('span', 'readout');
   private readonly playButton = element('button', 'control');
   private readonly warnings = element('p', 'warnings');
   private readonly cards = element('div', 'cards');
+  private readonly editor: PartEditor;
 
   private state: PanelState | null = null;
 
   constructor(options: PanelOptions) {
     this.options = options;
+    this.editor = new PartEditor({
+      onApply: build => this.options.onChange({ build }),
+      onSelect: (part, characteristic) => this.options.onChange({ part, characteristic }),
+    });
     this.build();
   }
 
-  /** The inputs and warnings, for the Controls window. */
-  get controlsElement(): HTMLElement {
-    return this.controlsHost;
+  /** The build-level controls, which travel with the reader to either face. */
+  get buildControlsElement(): HTMLElement {
+    return this.buildHost;
+  }
+
+  /** The picture-only controls, which stay in the Controls window. */
+  get pictureControlsElement(): HTMLElement {
+    return this.pictureHost;
   }
 
   /** The readout cards, for the Readouts window. */
@@ -153,28 +125,38 @@ export class ControlPanel {
   }
 
   private build(): void {
-    for (const preset of this.options.presets)
-      this.presetSelect.append(new Option(preset.title, preset.id));
+    for (const face of ['sheet', 'visual'] as const)
+      this.faceSelect.append(new Option(FACE_LABELS[face], face));
+
+    for (const kind of ['model', 'board'] as const)
+      this.visualSelect.append(new Option(VISUAL_LABELS[kind], kind));
 
     for (const kind of ['streaming', 'random', 'mixed'] as const)
       this.workloadSelect.append(new Option(WORKLOAD_LABELS[kind], kind));
 
-    for (const view of ['model', 'board', 'flow'] as const)
-      this.viewSelect.append(new Option(VIEW_LABELS[view], view));
+    const pickerHost = element('div', 'pickers');
+    for (const definition of partDefinitions()) {
+      const picker = element('select', 'control');
+      picker.title
+        = `Whether this build has a ${definition.label.toLowerCase()}. A part appears only when you add it, so nothing is filled in for you.`;
+      picker.addEventListener('change', () => {
+        const build = this.state?.build;
+        if (build === undefined || picker.value !== 'add')
+          return;
+        this.options.onChange({ build: addPart(build, definition.id) });
+      });
+      this.pickers.set(definition.id, picker);
+      pickerHost.append(slot(definition.label, picker));
+    }
+
+    this.faceSelect.title
+      = 'The build sheet explains the machine in words; the visualisation draws it. Both show the same build.';
+    this.visualSelect.title
+      = 'Model draws the machine in 3D where you can orbit it; Board draws the same machine flat.';
 
     configureRange(this.explodeSlider, EXPLODE_RANGE.min, EXPLODE_RANGE.max, EXPLODE_RANGE.step);
     this.explodeSlider.title
       = 'How far apart to pull the parts. At 0 they assemble onto the board; at 100% they separate, so the traces buried inside a package become visible.';
-    this.viewSelect.title
-      = 'Model draws the machine in 3D where you can orbit it; Board draws it flat; Flow draws one row per cache level.';
-
-    configureRange(this.mtInput, MT_RANGE.min, MT_RANGE.max, MT_RANGE.step);
-    this.mtInput.title
-      = 'Memory speed in MT/s. Channel count and CAS latency stay fixed, so this isolates bandwidth on its own.';
-
-    configureRange(this.clSlider, CL_RANGE.min, CL_RANGE.max, CL_RANGE.step);
-    this.clSlider.title
-      = 'CAS latency in memory clock cycles. Channels and MT/s stay fixed, so this isolates latency on its own.';
 
     configureRange(this.playbackSlider, 0, 1, 0.001);
     this.playbackSlider.title
@@ -185,26 +167,16 @@ export class ControlPanel {
     restart.title = 'Rewind the animation to the start of the traced window.';
     const resetView = element('button', 'control', 'Reset view');
     resetView.title
-      = 'Puts the 3D camera back to its opening angle. In the flat views there is no camera to reset.';
+      = 'Puts the 3D camera back to its opening angle. In the flat view there is no camera to reset.';
 
-    this.presetSelect.addEventListener('change', () =>
-      this.options.onChange({ presetId: this.presetSelect.value }));
+    this.faceSelect.addEventListener('change', () =>
+      this.options.onChange({ view: this.faceSelect.value as ViewMode }));
+
+    this.visualSelect.addEventListener('change', () =>
+      this.options.onChange({ visualKind: this.visualSelect.value as VisualKind }));
 
     this.workloadSelect.addEventListener('change', () =>
       this.options.onChange({ workloadKind: this.workloadSelect.value as WorkloadKind }));
-
-    this.mtInput.addEventListener('input', () =>
-      this.options.onChange({
-        isolating: { casLatency: this.casLatency, mtPerSecond: Number(this.mtInput.value) },
-      }));
-
-    this.clSlider.addEventListener('input', () =>
-      this.options.onChange({
-        isolating: { casLatency: Number(this.clSlider.value), mtPerSecond: this.mtPerSecond },
-      }));
-
-    this.viewSelect.addEventListener('change', () =>
-      this.options.onChange({ view: this.viewSelect.value as ViewMode }));
 
     this.explodeSlider.addEventListener('input', () =>
       this.options.onChange({ explode: Number(this.explodeSlider.value) }));
@@ -218,14 +190,20 @@ export class ControlPanel {
     restart.addEventListener('click', () => this.options.onRestart());
     resetView.addEventListener('click', () => this.options.onResetView());
 
-    const controls = element('div', 'controls');
-    controls.append(
-      slot('View', this.viewSelect),
-      slot('Explode', this.explodeSlider, this.explodeReadout),
-      slot('Rig', this.presetSelect),
+    // The split is the point: the build controls travel with the reader to either
+    // face, and the picture controls stay with the picture.
+    const buildControls = element('div', 'controls');
+    buildControls.append(
+      slot('View', this.faceSelect),
       slot('Workload', this.workloadSelect),
-      slot('Memory speed', this.mtInput, this.mtReadout),
-      slot('CAS latency', this.clSlider, this.clReadout),
+      pickerHost,
+      this.editor.element,
+    );
+
+    const pictureControls = element('div', 'controls');
+    pictureControls.append(
+      slot('Draw', this.visualSelect),
+      slot('Explode', this.explodeSlider, this.explodeReadout),
       slot('Speed', this.playbackSlider, this.playbackReadout),
       slot('Animation', this.playButton),
       slot('', restart),
@@ -234,32 +212,28 @@ export class ControlPanel {
 
     this.warnings.setAttribute('aria-live', 'polite');
 
-    this.controlsHost.append(controls, this.warnings);
+    this.buildHost.append(buildControls, this.warnings);
+    this.pictureHost.append(pictureControls);
   }
 
-  private get mtPerSecond(): number {
-    return Number(this.mtInput.value);
-  }
-
-  private get casLatency(): number {
-    return Number(this.clSlider.value);
-  }
-
-  /** Republishes every value, so the DOM always mirrors the state. */
-  update(state: PanelState, result: SimResult, memory: MemorySpec, memoryWarnings: readonly string[]): void {
-    this.presetSelect.value = state.presetId;
-    this.workloadSelect.value = state.workloadKind;
-    this.mtInput.value = String(state.isolating.mtPerSecond);
-    this.clSlider.value = String(state.isolating.casLatency);
+  /**
+   * Republishes every value, so the DOM always mirrors the state. A build that is
+   * missing a part has no run, so `result` is null and the cards go away rather
+   * than describe a machine nobody assembled.
+   */
+  update(state: PanelState, result: SimResult | null, memoryWarnings: readonly string[]): void {
     this.playbackSlider.value = String(sliderFromNsPerSecond(state.nsPerSecond));
     this.syncState(state);
-
-    this.showReadouts(memory);
 
     this.warnings.textContent = memoryWarnings.length > 0
       ? `Outside this board's spec: ${memoryWarnings.join('; ')}`
       : '';
 
+    const memory = state.build.parts.memory;
+    if (result === null || memory === undefined) {
+      this.cards.replaceChildren();
+      return;
+    }
     this.renderCards(result, memory);
   }
 
@@ -276,23 +250,34 @@ export class ControlPanel {
       state.playing ? 'Pause the animation' : 'Play the animation',
     );
     this.playbackReadout.textContent = `1 s = ${formatDuration(state.nsPerSecond)}`;
-    this.viewSelect.value = state.view;
+    this.faceSelect.value = state.view;
+    this.visualSelect.value = state.visualKind;
     this.explodeSlider.value = String(state.explode);
     this.explodeReadout.textContent = state.explode <= 0
       ? 'assembled on the board'
       : state.explode >= 1 ? 'fully apart' : `${Math.round(state.explode * 100)}% apart`;
-  }
+    this.workloadSelect.value = state.workloadKind;
 
-  /**
-   * Refreshes only the DIMM-derived readouts. These need no simulation, so the
-   * sliders can call this on every input event while the costly re-run is
-   * debounced elsewhere.
-   */
-  showReadouts(memory: MemorySpec): void {
-    this.mtReadout.textContent = `${formatBandwidth(
-      aggregateBandwidthBytesPerNs(memory),
-    )} peak · one access ${formatDuration(fullAccessNs(memory))}`;
-    this.clReadout.textContent = `CAS ${formatDuration(casLatencyNs(memory.mtPerSecond, memory.casLatency))}`;
+    // "Not added" is offered only while the part is absent, so a build cannot
+    // silently lose a part it was measured with. The option list is rebuilt only
+    // when presence changes, so a drag cannot close a picker the reader opened.
+    for (const definition of partDefinitions()) {
+      const picker = this.pickers.get(definition.id);
+      if (picker === undefined)
+        continue;
+      const present = hasPart(state.build, definition.id);
+      const shape = present ? 'present' : 'absent';
+      if (picker.dataset.shape !== shape) {
+        picker.dataset.shape = shape;
+        picker.replaceChildren(
+          ...(present ? [] : [new Option('Not added', 'absent')]),
+          new Option('Enter your own', 'add'),
+        );
+      }
+      picker.value = present ? 'add' : 'absent';
+    }
+
+    this.editor.update(state.build, state.part, state.characteristic);
   }
 
   private renderCards(result: SimResult, memory: MemorySpec): void {
