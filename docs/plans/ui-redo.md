@@ -96,7 +96,7 @@ through the data layer (`addPart`, `applyParameter`, `buildSheet`, `simulate`).
 | --- | --- | --- |
 | U1 | Toolchain: React + Tailwind + shadcn scaffold; the app shell renders; old UI deleted | shipped |
 | U2 | The build list: add a part, edit its whole spec at once, remove it | shipped |
-| U3 | The analysis: verdict + Compatibility / Performance / Parts tabs, from the sheet model | not started |
+| U3 | The analysis: verdict + Compatibility / Performance / Parts tabs, from the sheet model | shipped |
 | U4 | Visualisation tab: the 3D model and flat board wrapped as a component, with the playback controls | not started |
 | U5 | Aesthetic + accessibility pass, colourblind verification, component tests | not started |
 
@@ -134,13 +134,23 @@ exhaustiveness guard). Component tests cover add/edit/remove and a refusal.
 
 ### U3 — The analysis
 
-- [ ] A `<Verdict>` summary from `buildSheet` (compatible / issue count / cannot
-      run yet) always visible at the top.
-- [ ] Tabs: **Compatibility** (`checks`, grouped by severity, ✓/✘ + word),
-      **Performance** (the run verdict + `ceilings`/`floors`), **Parts** (the
-      `parts` sections). Every string still comes from the sheet model.
-- [ ] The run is debounced exactly as `main.ts` does today; the verdict and the
-      picture read one `SimResult`.
+Shipped. `App` holds the build, the workload and the `SimResult`, running
+`simulate` in a debounced effect (150 ms, ~0 ms to clear when the build is
+incomplete) so the compatibility checks update instantly while the run catches
+up. `AnalysisPanel` shows a verdict bar — a compatibility summary (glyph + word)
+over the run verdict — then shadcn Tabs: **Compatibility** (checks, failures
+first, each a ✓/✘/⚠ + word), **Performance** (measured figures, ceilings, floors)
+and **Parts** (the spec reference + the unmodelled list). A workload ToggleGroup
+re-runs the analysis. Every string is the sheet model's; the panel formats
+nothing.
+
+- [x] A verdict bar from `buildSheet` (compatibility summary + the run verdict),
+      always visible above the tabs.
+- [x] Tabs — Compatibility (`checks`, ordered failures-first, ✓/✘/⚠ + word),
+      Performance (the run verdict + `measured`/`ceilings`/`floors`), Parts (the
+      `parts` sections + `unmodeled`). Every string comes from the sheet model.
+- [x] The run is debounced; the verdict and the checks read one build, the run
+      lagging by the debounce window only.
 
 ### U4 — The visualisation tab
 

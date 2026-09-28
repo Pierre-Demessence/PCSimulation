@@ -1,28 +1,67 @@
-import { useState } from 'react';
+import type { SimResult } from '@/sim';
+import type { WorkloadKind, WorkloadSpec } from '@/workloads';
 
-import { emptyBuild } from '@/data';
+import { useEffect, useMemo, useState } from 'react';
 
+import { completeBuild, emptyBuild } from '@/data';
+import { buildSheet } from '@/sheet';
+import { simulate } from '@/sim';
+import { generateAccesses, mixedSpec, randomSpec, streamingSpec } from '@/workloads';
+
+import { AnalysisPanel } from './components/AnalysisPanel';
 import { BuildPanel } from './components/BuildPanel';
+
+/** Kept small so the debounced run stays responsive on the main thread. */
+const ACCESS_COUNT = 50_000;
+
+/** Milliseconds of idle after the last edit before the simulation re-runs. */
+const REBUILD_DEBOUNCE_MS = 150;
+
+function workloadSpec(kind: WorkloadKind): WorkloadSpec {
+  const base = { accessCount: ACCESS_COUNT };
+  if (kind === 'random')
+    return randomSpec(base);
+  if (kind === 'mixed')
+    return mixedSpec(base);
+  return streamingSpec(base);
+}
 
 export function App() {
   const [build, setBuild] = useState(() => emptyBuild());
+  const [workload, setWorkload] = useState<WorkloadKind>('streaming');
+  const [result, setResult] = useState<SimResult | null>(null);
+
+  // The compatibility checks update instantly; the run is debounced, because a
+  // full simulation is too slow to do on every keystroke. The set happens only
+  // inside the timer, so an incomplete build clears the result on the next tick.
+  useEffect(() => {
+    const config = completeBuild(build);
+    const timer = setTimeout(() => {
+      setResult(config === null ? null : simulate(config, generateAccesses(workloadSpec(workload))));
+    }, config === null ? 0 : REBUILD_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [build, workload]);
+
+  const sheet = useMemo(
+    () => buildSheet({ build, origin: {}, result, workload }),
+    [build, workload, result],
+  );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex h-screen flex-col bg-background text-foreground">
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-baseline gap-3">
           <h1 className="text-base font-semibold tracking-tight">PC Build Analyzer</h1>
           <span className="font-mono text-xs text-muted-foreground">v0.2</span>
         </div>
       </header>
-      <main className="grid flex-1 gap-px bg-border md:grid-cols-[minmax(24rem,2fr)_3fr]">
+      <main className="grid min-h-0 flex-1 gap-px bg-border md:grid-cols-[minmax(24rem,2fr)_3fr]">
         <section aria-label="Build" className="overflow-auto bg-background p-6">
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Build</h2>
           <BuildPanel build={build} onChange={setBuild} />
         </section>
-        <section aria-label="Analysis" className="bg-background p-6">
-          <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Analysis</h2>
-          <p className="text-sm text-muted-foreground">The verdict and tabs arrive in U3.</p>
+        <section aria-label="Analysis" className="overflow-auto bg-background p-6">
+          <AnalysisPanel sheet={sheet} workload={workload} onWorkloadChange={setWorkload} />
         </section>
       </main>
     </div>
