@@ -1,12 +1,10 @@
 import { resolve } from 'node:path';
 
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'preact',
-  },
+  plugins: [react()],
   resolve: {
     alias: [
       { find: /^@\/(.*)$/, replacement: resolve(__dirname, 'src/$1') },
@@ -14,10 +12,11 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
-      exclude: ['src/**/*.test.ts', 'src/main.ts'],
-      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/main.tsx'],
+      include: ['src/**/*.{ts,tsx}'],
       provider: 'v8',
     },
   },

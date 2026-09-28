@@ -2,6 +2,7 @@ import antfu from '@antfu/eslint-config';
 
 export default antfu({
   type: 'app',
+  react: true,
   markdown: false,
   typescript: true,
   stylistic: {
@@ -9,5 +10,5 @@ export default antfu({
     quotes: 'single',
     semi: true,
   },
-  ignores: ['dist/**', 'coverage/**', 'docs/**'],
+  ignores: ['dist/**', 'coverage/**', 'docs/**', 'src/components/ui/**'],
 });

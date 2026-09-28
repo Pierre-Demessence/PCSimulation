@@ -94,7 +94,7 @@ through the data layer (`addPart`, `applyParameter`, `buildSheet`, `simulate`).
 
 | Wave | Deliverable | Status |
 | --- | --- | --- |
-| U1 | Toolchain: React + Tailwind + shadcn scaffold; the app shell renders; old UI deleted | not started |
+| U1 | Toolchain: React + Tailwind + shadcn scaffold; the app shell renders; old UI deleted | shipped |
 | U2 | The build list: add a part, edit its whole spec at once, remove it | not started |
 | U3 | The analysis: verdict + Compatibility / Performance / Parts tabs, from the sheet model | not started |
 | U4 | Visualisation tab: the 3D model and flat board wrapped as a component, with the playback controls | not started |
@@ -102,13 +102,19 @@ through the data layer (`addPart`, `applyParameter`, `buildSheet`, `simulate`).
 
 ### U1 — Toolchain and shell
 
-- [ ] Install the React + Tailwind + shadcn stack; remove `@pierre/winkit` and
-      `preact`. Run `shadcn init`.
-- [ ] Rewire `tsconfig`, `vite.config`, `vitest.config`, `eslint.config` for
+Shipped. Fonts are IBM Plex Sans (variable) + IBM Plex Mono, self-hosted via
+`@fontsource`; the app defaults to the dark theme (`class="dark"` on `<html>`).
+The bundle drops to ~221 kB because three.js is now tree-shaken out until the
+visualisation tab wires it back in (U4).
+
+- [x] Install the React + Tailwind + shadcn stack; remove `@pierre/winkit` and
+      `preact`. Run `shadcn init` (Nova preset, Radix base, neutral colours).
+- [x] Rewire `tsconfig`, `vite.config`, `vitest.config`, `eslint.config` for
       React; rewrite `index.html` to a single `#root` + `src/main.tsx`.
-- [ ] Delete `src/main.ts` and the `src/ui/` DOM files and their tests.
-- [ ] Render an empty two-region shell (build list | analysis) with the fonts and
-      theme tokens in place. `npm run build`, `lint`, `test` green.
+- [x] Delete `src/main.ts` and the `src/ui/` DOM files and their tests
+      (`editor.test.ts`, `sheet.test.ts` go; the sheet-model tests stay).
+- [x] Render an empty two-region shell (build | analysis) with the fonts and
+      theme tokens in place. `npm run build`, `lint`, `test` (133) green.
 
 ### U2 — The build list
 

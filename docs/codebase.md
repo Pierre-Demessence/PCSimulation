@@ -62,22 +62,20 @@
   - `format.ts` — the pure formatting and scale helpers, with no canvas; it also
     holds the playback clock's arithmetic (`simulatedNsAt`, `windowOf`) and the
     level labels (`levelLabel`).
-- `src/ui/` — the control panel, the part bench, the readout cards and the sheet
-  renderer (`panel.ts`, `editor.ts`, `sheet.ts`, `dom.ts`), and the floating
-  windows that host them (`windows.tsx`, a Preact `WindowLayer` from
-  `@pierre/winkit`). `panel.ts` builds plain DOM and exposes it as three
-  elements — the build controls, the picture controls and the readouts;
-  `editor.ts` is the bench — one part, one characteristic, one control, built
-  from the parameter registry; `sheet.ts` renders a `BuildSheet` into `#sheet`
-  and formats nothing, because every string comes from the model; `dom.ts` holds
-  the row and label helpers they share. `windows.tsx` adopts those nodes into
-  draggable windows over the canvas.
-- `src/main.ts` — wiring: state, re-simulation on change, the two faces and the
-  animation loop. Only the active face is on screen, and only it is drawn.
-- `src/styles.css` — the full-viewport stage, the intro block, the build sheet's
-  document rules, and the winkit window theming.
-- `index.html` — Vite HTML entry; `%APP_NAME%` is replaced from `brand.json`.
-- `vite.config.ts` / `vitest.config.ts` — build and test config; both share the `@/` alias.
+- `src/` (interface) — a React 19 app, rebuilt from scratch as a windowless
+  build analyzer (see [plans/ui-redo.md](plans/ui-redo.md)).
+  - `main.tsx` — the entry: mounts `<App>` into `#root` and imports the styles.
+  - `App.tsx` — the single-page shell: a build region beside an analysis region.
+    The build list, the part editor and the analysis tabs are added across the
+    UI waves; each reads the data layer and renders the sheet model.
+  - `components/ui/` — shadcn/ui primitives, added as source (vendored; excluded
+    from lint).
+  - `lib/utils.ts` — the `cn()` class-name helper.
+- `src/styles.css` — the Tailwind entry: `@import "tailwindcss"`, the shadcn
+  theme tokens (light and `.dark`), and the IBM Plex font faces.
+- `index.html` — Vite HTML entry; `<html class="dark">`, a single `#root`, and
+  `%APP_NAME%` replaced from `brand.json`.
+- `vite.config.ts` / `vitest.config.ts` — build and test config; both share the `@/` alias and the React plugin.
 - `eslint.config.ts` — flat ESLint config.
 - `docs/` — project documentation (start at [INDEX.md](INDEX.md)).
 
