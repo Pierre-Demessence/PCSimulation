@@ -147,10 +147,10 @@ describe('parameter registry', () => {
           continue;
         const label = `${definition.id}.${parameter.id}`;
 
-        const low = applyParameter(build, definition.id, parameter.id, -1e12);
+        const low = applyParameter(build, definition.id, parameter.id, -1e15);
         expect(parameter.get(definition.read(low.build)), label).toBe(parameter.min);
 
-        const high = applyParameter(build, definition.id, parameter.id, 1e12);
+        const high = applyParameter(build, definition.id, parameter.id, 1e15);
         const clamped = parameter.get(definition.read(high.build)) as number;
         expect(clamped, label).toBe(parameter.max);
         expect(isOnGrid(clamped, parameter.min, parameter.step), label).toBe(true);

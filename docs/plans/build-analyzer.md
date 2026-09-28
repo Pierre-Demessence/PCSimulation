@@ -199,7 +199,7 @@ export interface CompatRule {
 | B1 | Spine flip: `Build` decouples from `HardwareConfig`; `completeBuild` becomes a projection; the sim keeps its input | shipped |
 | B2 | Compatibility vocabulary + engine: sockets, chipsets, form factors, connectors, severity; CPU↔board socket the first new check | shipped |
 | B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | shipped |
-| B4 | Storage + cooler: interface + ports, socket support, TDP headroom | not started |
+| B4 | Storage + cooler: interface + ports, socket support, TDP headroom | shipped |
 | B5 | Case + physical fit: form factor, GPU length, cooler height, radiator support | not started |
 | B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | not started |
 | UI | Full view-layer rewrite: single-page, windowless, build-list spine + organised analysis (design TBD) | not started |
@@ -302,13 +302,21 @@ grew `pcieVersion`/`pcieLanes`/`powerConnectors`; `watts`/`mm` units were added.
 
 ### B4 — Storage and cooler
 
-- [ ] Add `StorageSpec` (interface: SATA / NVMe-PCIe, lanes, form factor) and
-      `CoolerSpec` (supported sockets, TDP rating, height mm); extend `Build`.
-- [ ] Checks: the cooler supports the CPU socket; the cooler's TDP rating ≥ the
-      CPU TDP; the drive's interface is offered by the board; M.2 occupancy
-      splits the GPU's lanes (a static rule the roadmap already records).
-- [ ] Tests: an unsupported socket is `incompatible`; an under-rated cooler is a
-      `warning`; populating M.2 moves the GPU lane budget.
+Shipped, on B3's sim-less-part pattern. `StorageSpec` (interface, PCIe lanes,
+capacity) and `CoolerSpec` (supported sockets, TDP rating, height) join
+`parts/specs.ts` and `CompatParts`; the board gained `m2Slots`/`sataPorts`.
+
+- [x] Add `StorageSpec` and `CoolerSpec`; extend `Build`, `PartId`,
+      `toConfigParts`, `removePart`, and register a `storagePart`/`coolerPart`
+      with `slots: []`. Height and capacity are `display-only` (no rule reads
+      them yet).
+- [x] Checks: the cooler supports the CPU socket (`incompatible`); the cooler's
+      TDP rating covers the CPU TDP (`warning`); the drive's interface has a slot
+      on the board (`incompatible`); and an NVMe drive's lanes come out of the
+      graphics slot's budget, so populating M.2 narrows the GPU lane check.
+- [x] Tests: an unsupported cooler socket and a slot-less drive (M.2 and SATA)
+      are `incompatible`; an under-rated cooler warns; and an NVMe drive tips the
+      GPU lane budget from met to warned.
 
 ### B5 — Case and physical fit
 

@@ -1,5 +1,5 @@
 import type { CpuPart, PartId } from './parameters';
-import type { CompatParts, GpuSpec, PsuSpec } from './parts/specs';
+import type { CompatParts, CoolerSpec, GpuSpec, PsuSpec, StorageSpec } from './parts/specs';
 
 import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 import { partDefinition, partDefinitions } from './parameters';
@@ -18,11 +18,13 @@ export interface Build {
   readonly motherboard: MotherboardSpec | null;
   readonly gpu: GpuSpec | null;
   readonly psu: PsuSpec | null;
+  readonly storage: StorageSpec | null;
+  readonly cooler: CoolerSpec | null;
 }
 
 /** Where every build starts: nothing added. */
 export function emptyBuild(): Build {
-  return { cpu: null, memory: null, motherboard: null, gpu: null, psu: null };
+  return { cpu: null, memory: null, motherboard: null, gpu: null, psu: null, storage: null, cooler: null };
 }
 
 /**
@@ -73,6 +75,10 @@ export function toConfigParts(build: Build): CompatParts {
     parts.gpu = build.gpu;
   if (build.psu !== null)
     parts.psu = build.psu;
+  if (build.storage !== null)
+    parts.storage = build.storage;
+  if (build.cooler !== null)
+    parts.cooler = build.cooler;
   return parts;
 }
 
@@ -100,6 +106,10 @@ export function removePart(build: Build, part: PartId): Build {
       return { ...build, gpu: null };
     case 'psu':
       return { ...build, psu: null };
+    case 'storage':
+      return { ...build, storage: null };
+    case 'cooler':
+      return { ...build, cooler: null };
     default: {
       // Forces this switch to be revisited when a new part kind is added.
       const unreachable: never = part;

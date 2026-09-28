@@ -1,5 +1,5 @@
 import type { Build } from './build';
-import type { GpuSpec, PsuSpec } from './parts/specs';
+import type { CoolerSpec, GpuSpec, PsuSpec, StorageInterface, StorageSpec } from './parts/specs';
 import type {
   CacheHierarchy,
   CacheSpec,
@@ -20,7 +20,7 @@ import { BASELINE_CPU, CACHE_HIERARCHY, CYCLES_PER_ISSUE, memorySpec } from './p
  * What the user picks and swaps. A part owns one or more slots; the CPU owns its
  * three cache levels, because that is where they are.
  */
-export type PartId = 'cpu' | 'gpu' | 'memory' | 'motherboard' | 'psu';
+export type PartId = 'cooler' | 'cpu' | 'gpu' | 'memory' | 'motherboard' | 'psu' | 'storage';
 
 /** What the model consumes: one entry per position of `HardwareConfig`. */
 export type SlotId = LevelId | 'motherboard';
@@ -197,6 +197,15 @@ function isSocket(value: string): value is Socket {
 
 function isPowerConnector(value: string): value is PowerConnector {
   return (POWER_CONNECTORS as readonly string[]).includes(value);
+}
+
+const STORAGE_INTERFACES: readonly { readonly value: StorageInterface; readonly label: string }[] = [
+  { label: 'NVMe (M.2)', value: 'nvme' },
+  { label: 'SATA', value: 'sata' },
+];
+
+function isStorageInterface(value: string): value is StorageInterface {
+  return value === 'nvme' || value === 'sata';
 }
 
 function cacheLevelOf(slot: string): CacheLevel | null {
@@ -536,8 +545,10 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
     maxChannels: 4,
     maxMtPerSecond: 6400,
     pcieLanes: 20,
+    m2Slots: 2,
     pcieVersion: 4,
     powerConnectors: ['atx-24', 'eps-8'],
+    sataPorts: 4,
     socket: 'lga1700',
   },
   id: 'motherboard',
@@ -651,6 +662,34 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
       label: 'Power connectors',
       options: POWER_CONNECTORS.map(connector => ({ label: POWER_CONNECTOR_LABELS[connector], value: connector })),
       with: (part, value) => ({ ...part, powerConnectors: value.filter(isPowerConnector) }),
+    }),
+    numeric<MotherboardSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.m2Slots,
+      group: 'motherboard',
+      help: 'How many M.2 drives the board hosts. A compatibility rule checks an NVMe drive has a slot; each shares the graphics lanes.',
+      id: 'm2Slots',
+      label: 'M.2 slots',
+      max: 8,
+      min: 0,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, m2Slots: value }),
+    }),
+    numeric<MotherboardSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.sataPorts,
+      group: 'motherboard',
+      help: 'How many SATA drives the board hosts. A compatibility rule checks a SATA drive has a port.',
+      id: 'sataPorts',
+      label: 'SATA ports',
+      max: 12,
+      min: 0,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, sataPorts: value }),
     }),
   ],
   read: build => build.motherboard,
@@ -794,12 +833,126 @@ const psuPart: PartDefinition<PsuSpec> = {
   write: (build, part) => ({ ...build, psu: part }),
 };
 
+const storagePart: PartDefinition<StorageSpec> = {
+  blank: {
+    capacityBytes: 1024 * GIB_BYTES,
+    id: 'storage-blank',
+    identity: 'Custom drive',
+    interface: 'nvme',
+    pcieLanes: 4,
+  },
+  id: 'storage',
+  label: 'Storage',
+  parameters: [
+    choice<StorageSpec>({
+      control: 'choice',
+      effect: 'validated',
+      get: part => part.interface,
+      group: 'storage',
+      help: 'How the drive attaches. A compatibility rule checks the board offers it; an NVMe drive also takes PCIe lanes from the graphics slot.',
+      id: 'interface',
+      label: 'Interface',
+      options: STORAGE_INTERFACES.map(option => ({ label: option.label, value: option.value })),
+      with: (part, value) => ({ ...part, interface: isStorageInterface(value) ? value : part.interface }),
+    }),
+    numeric<StorageSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.pcieLanes,
+      group: 'storage',
+      help: 'The PCIe lanes an NVMe drive occupies, shared with the graphics slot. A SATA drive uses none.',
+      id: 'pcieLanes',
+      label: 'PCIe lanes',
+      max: 4,
+      min: 0,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, pcieLanes: value }),
+    }),
+    numeric<StorageSpec>({
+      control: 'range',
+      effect: 'display-only',
+      get: part => part.capacityBytes,
+      group: 'storage',
+      help: 'How much the drive holds. Nothing reads it yet; it is recorded so the part is complete.',
+      id: 'capacityBytes',
+      label: 'Capacity',
+      max: 8 * 1024 * GIB_BYTES,
+      min: GIB_BYTES,
+      step: GIB_BYTES,
+      unit: 'bytes',
+      with: (part, value) => ({ ...part, capacityBytes: value }),
+    }),
+  ],
+  read: build => build.storage,
+  slots: [],
+  write: (build, part) => ({ ...build, storage: part }),
+};
+
+const coolerPart: PartDefinition<CoolerSpec> = {
+  blank: {
+    heightMm: 150,
+    id: 'cooler-blank',
+    identity: 'Custom cooler',
+    supportedSockets: ['am4', 'am5', 'lga1200', 'lga1700', 'lga1851'],
+    tdpRatingWatts: 150,
+  },
+  id: 'cooler',
+  label: 'CPU cooler',
+  parameters: [
+    flags<CoolerSpec>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.supportedSockets,
+      group: 'cooler',
+      help: 'The sockets this cooler mounts on. A compatibility rule checks the CPU socket is among them.',
+      id: 'supportedSockets',
+      label: 'Supported sockets',
+      options: SOCKETS.map(socket => ({ label: SOCKET_LABELS[socket], value: socket })),
+      with: (part, value) => ({ ...part, supportedSockets: value.filter(isSocket) }),
+    }),
+    numeric<CoolerSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.tdpRatingWatts,
+      group: 'cooler',
+      help: 'The heat the cooler can dissipate. A compatibility rule checks it covers the CPU TDP.',
+      id: 'tdpRatingWatts',
+      label: 'TDP rating',
+      max: 500,
+      min: 1,
+      step: 1,
+      unit: 'watts',
+      with: (part, value) => ({ ...part, tdpRatingWatts: value }),
+    }),
+    numeric<CoolerSpec>({
+      control: 'range',
+      effect: 'display-only',
+      get: part => part.heightMm,
+      group: 'cooler',
+      help: 'The cooler height. A future rule checks it against the case; nothing simulates it.',
+      id: 'heightMm',
+      label: 'Height',
+      max: 200,
+      min: 20,
+      step: 5,
+      unit: 'mm',
+      with: (part, value) => ({ ...part, heightMm: value }),
+    }),
+  ],
+  read: build => build.cooler,
+  slots: [],
+  write: (build, part) => ({ ...build, cooler: part }),
+};
+
 const PARTS: readonly PartDefinition<unknown>[] = [
   cpuPart,
   memoryPart,
   motherboardPart,
   gpuPart,
   psuPart,
+  storagePart,
+  coolerPart,
 ] as unknown as readonly PartDefinition<unknown>[];
 
 export function partDefinitions(): readonly PartDefinition<unknown>[] {

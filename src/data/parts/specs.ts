@@ -1,4 +1,7 @@
-import type { HardwareConfig, PcieVersion, PowerConnector } from '@/sim';
+import type { HardwareConfig, PcieVersion, PowerConnector, Socket } from '@/sim';
+
+/** How a drive attaches. Compatibility-only. */
+export type StorageInterface = 'nvme' | 'sata';
 
 /**
  * A graphics card. Compatibility-only: the simulation never reads it, so every
@@ -22,6 +25,24 @@ export interface PsuSpec {
   readonly connectors: readonly PowerConnector[];
 }
 
+/** A drive. Compatibility-only. An NVMe drive occupies PCIe lanes; a SATA drive does not. */
+export interface StorageSpec {
+  readonly id: string;
+  readonly identity: string;
+  readonly interface: StorageInterface;
+  readonly pcieLanes: number;
+  readonly capacityBytes: number;
+}
+
+/** A CPU cooler. Compatibility-only. */
+export interface CoolerSpec {
+  readonly id: string;
+  readonly identity: string;
+  readonly supportedSockets: readonly Socket[];
+  readonly tdpRatingWatts: number;
+  readonly heightMm: number;
+}
+
 /**
  * The compatibility view of a build: the memory-path config fields plus the
  * sim-less parts. The rules walk this, so a GPU or PSU rule reads its part even
@@ -30,4 +51,6 @@ export interface PsuSpec {
 export interface CompatParts extends Partial<HardwareConfig> {
   readonly gpu?: GpuSpec;
   readonly psu?: PsuSpec;
+  readonly storage?: StorageSpec;
+  readonly cooler?: CoolerSpec;
 }

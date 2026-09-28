@@ -14,8 +14,10 @@ const DDR4_BOARD: MotherboardSpec = {
   maxChannels: 2,
   maxMtPerSecond: 3200,
   pcieLanes: 20,
+  m2Slots: 2,
   pcieVersion: 4,
   powerConnectors: ['atx-24', 'eps-8'],
+  sataPorts: 4,
   socket: 'lga1700',
 };
 
@@ -26,8 +28,10 @@ const DDR5_BOARD: MotherboardSpec = {
   maxChannels: 4,
   maxMtPerSecond: 6000,
   pcieLanes: 20,
+  m2Slots: 2,
   pcieVersion: 5,
   powerConnectors: ['atx-24', 'eps-8'],
+  sataPorts: 4,
   socket: 'lga1700',
 };
 

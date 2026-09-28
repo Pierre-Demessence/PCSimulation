@@ -1,4 +1,4 @@
-import type { GpuSpec, PsuSpec } from '@/data';
+import type { CoolerSpec, GpuSpec, PsuSpec, StorageSpec } from '@/data';
 import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
@@ -27,6 +27,22 @@ const BASE_PSU: PsuSpec = {
   id: 'psu',
   identity: 'Test PSU',
   wattage: 650,
+};
+
+const BASE_COOLER: CoolerSpec = {
+  heightMm: 150,
+  id: 'cooler',
+  identity: 'Test cooler',
+  supportedSockets: ['lga1700'],
+  tdpRatingWatts: 150,
+};
+
+const BASE_STORAGE: StorageSpec = {
+  capacityBytes: 1_000_000_000_000,
+  id: 'storage',
+  identity: 'Test drive',
+  interface: 'nvme',
+  pcieLanes: 4,
 };
 
 describe('validateConfiguration', () => {
@@ -60,8 +76,10 @@ describe('validateConfiguration', () => {
       maxChannels: 4,
       maxMtPerSecond: 3200,
       pcieLanes: 20,
+      m2Slots: 2,
       pcieVersion: 4,
       powerConnectors: ['atx-24', 'eps-8'],
+      sataPorts: 4,
       socket: 'lga1700',
     };
     const problems = validateConfiguration({
@@ -143,5 +161,46 @@ describe('validateConfiguration', () => {
   it('warns when no part can drive a display', () => {
     const problems = validateConfiguration({ cpu: { ...BASELINE_CPU, integratedGraphics: false } });
     expect(problems).toContain('no display output: add a graphics card or a CPU with integrated graphics');
+  });
+
+  it('rejects a cooler that does not fit the CPU socket', () => {
+    const problems = validateConfiguration({
+      cooler: { ...BASE_COOLER, supportedSockets: ['am5'] },
+      cpu: BASELINE_CPU,
+    });
+    expect(problems.some(problem => problem.includes('cooler does not fit'))).toBe(true);
+  });
+
+  it('warns when the cooler is rated below the CPU TDP', () => {
+    const problems = validateConfiguration({
+      cooler: { ...BASE_COOLER, tdpRatingWatts: 30 },
+      cpu: BASELINE_CPU,
+    });
+    expect(problems.some(problem => problem.includes('below the CPU'))).toBe(true);
+  });
+
+  it('rejects a drive the board has no slot for', () => {
+    const problems = validateConfiguration({
+      motherboard: { ...testConfig().motherboard, m2Slots: 0 },
+      storage: BASE_STORAGE,
+    });
+    expect(problems.some(problem => problem.includes('no M.2 slot'))).toBe(true);
+  });
+
+  it('rejects a SATA drive the board has no port for', () => {
+    const problems = validateConfiguration({
+      motherboard: { ...testConfig().motherboard, sataPorts: 0 },
+      storage: { ...BASE_STORAGE, interface: 'sata', pcieLanes: 0 },
+    });
+    expect(problems.some(problem => problem.includes('no SATA slot'))).toBe(true);
+  });
+
+  it('narrows the GPU lane budget when an M.2 drive is populated', () => {
+    const gpu: GpuSpec = { ...BASE_GPU, pcieLanes: 20 };
+    const board = testConfig().motherboard;
+    const withoutM2 = validateConfiguration({ gpu, motherboard: board });
+    const withM2 = validateConfiguration({ gpu, motherboard: board, storage: BASE_STORAGE });
+    expect(withoutM2.some(problem => problem.includes('PCIe lanes'))).toBe(false);
+    expect(withM2.some(problem => problem.includes('PCIe lanes'))).toBe(true);
   });
 });

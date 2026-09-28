@@ -6,7 +6,7 @@ import type {
   MemorySpec,
   MotherboardSpec,
 } from '@/sim';
-import { addPart, BASELINE_CPU, CACHE_HIERARCHY, GIB, memorySpec } from '@/data';
+import { addPart, BASELINE_CPU, CACHE_HIERARCHY, GIB, memorySpec, partDefinitions } from '@/data';
 
 /**
  * A complete machine the tests can simulate, written out part by part.
@@ -26,8 +26,10 @@ export const DDR3_BOARD: MotherboardSpec = {
   maxChannels: 2,
   maxMtPerSecond: 1600,
   pcieLanes: 20,
+  m2Slots: 2,
   pcieVersion: 3,
   powerConnectors: ['atx-24', 'eps-8'],
+  sataPorts: 4,
   socket: 'lga1700',
 };
 
@@ -38,8 +40,10 @@ export const DDR4_BOARD: MotherboardSpec = {
   maxChannels: 2,
   maxMtPerSecond: 3200,
   pcieLanes: 20,
+  m2Slots: 2,
   pcieVersion: 4,
   powerConnectors: ['atx-24', 'eps-8'],
+  sataPorts: 4,
   socket: 'lga1700',
 };
 
@@ -50,8 +54,10 @@ export const DDR5_BOARD: MotherboardSpec = {
   maxChannels: 4,
   maxMtPerSecond: 6000,
   pcieLanes: 20,
+  m2Slots: 2,
   pcieVersion: 5,
   powerConnectors: ['atx-24', 'eps-8'],
+  sataPorts: 4,
   socket: 'lga1700',
 };
 
@@ -84,10 +90,15 @@ export function testBuild(overrides: Partial<HardwareConfig> = {}): Build {
     motherboard: config.motherboard,
     gpu: null,
     psu: null,
+    storage: null,
+    cooler: null,
   };
 }
 
 /** The build with every part present, for the tests that walk all part kinds. */
 export function testFullBuild(): Build {
-  return addPart(addPart(testBuild(), 'gpu'), 'psu');
+  let build = testBuild();
+  for (const definition of partDefinitions())
+    build = addPart(build, definition.id);
+  return build;
 }

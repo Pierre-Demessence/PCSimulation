@@ -76,6 +76,9 @@ export interface MotherboardSpec {
   readonly pcieLanes: number;
   /** Compatibility-only: the leads the supply must provide for the board. */
   readonly powerConnectors: readonly PowerConnector[];
+  /** Compatibility-only: how many M.2 and SATA drives the board can host. */
+  readonly m2Slots: number;
+  readonly sataPorts: number;
 }
 
 export interface CacheHierarchy {

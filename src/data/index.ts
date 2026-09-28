@@ -21,7 +21,7 @@ export type {
   RangeParameter,
   SlotId,
 } from './parameters';
-export type { CompatParts, GpuSpec, PsuSpec } from './parts/specs';
+export type { CompatParts, CoolerSpec, GpuSpec, PsuSpec, StorageInterface, StorageSpec } from './parts/specs';
 export {
   BASELINE_CPU,
   CACHE_HIERARCHY,

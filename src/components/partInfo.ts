@@ -27,6 +27,8 @@ const SUMMARY_FIELDS: Partial<Record<PartId, readonly string[]>> = {
   motherboard: ['socket', 'allowedGenerations', 'dimmSlots'],
   gpu: ['boardPowerWatts', 'powerConnectors'],
   psu: ['wattage', 'connectors'],
+  storage: ['interface', 'capacityBytes'],
+  cooler: ['tdpRatingWatts', 'supportedSockets'],
 };
 
 /** A short headline for a collapsed part row. */
@@ -52,6 +54,10 @@ function partOfSource(source: string): PartId | null {
     return 'gpu';
   if (head === 'psu')
     return 'psu';
+  if (head === 'storage')
+    return 'storage';
+  if (head === 'cooler')
+    return 'cooler';
   return null;
 }
 

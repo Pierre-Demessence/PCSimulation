@@ -264,16 +264,19 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
       const { gpu, motherboard } = parts;
       if (gpu === undefined || motherboard === undefined)
         return null;
-      const rule = `the card wants ${gpu.pcieLanes} PCIe lanes, and the board provides ${motherboard.pcieLanes}`;
+      const m2Lanes = parts.storage?.interface === 'nvme' ? parts.storage.pcieLanes : 0;
+      const available = motherboard.pcieLanes - m2Lanes;
+      const shared = m2Lanes > 0 ? `, less ${m2Lanes} for the M.2 drive` : '';
+      const rule = `the card wants ${gpu.pcieLanes} PCIe lanes, and ${available} are free (the board has ${motherboard.pcieLanes}${shared})`;
       return {
         rule,
-        statement: `${gpu.pcieLanes} PCIe lanes, and the board provides ${motherboard.pcieLanes}`,
-        violation: gpu.pcieLanes > motherboard.pcieLanes ? rule : null,
+        statement: `${gpu.pcieLanes} PCIe lanes, and ${available} are free`,
+        violation: gpu.pcieLanes > available ? rule : null,
       };
     },
     id: 'gpu-lanes-available',
     severity: 'warning',
-    sources: ['gpu.pcieLanes', 'motherboard.pcieLanes'],
+    sources: ['gpu.pcieLanes', 'motherboard.pcieLanes', 'storage.pcieLanes'],
   },
   {
     evaluate(parts) {
@@ -337,6 +340,58 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
     id: 'psu-wattage',
     severity: 'warning',
     sources: ['psu.wattage', 'cpu.tdpWatts', 'gpu.boardPowerWatts'],
+  },
+  {
+    evaluate(parts) {
+      const { cooler, cpu } = parts;
+      if (cpu === undefined || cooler === undefined)
+        return null;
+      const socket = cpu.socket.toUpperCase();
+      const rule = `the cooler does not fit the CPU's ${socket} socket`;
+      return {
+        rule,
+        statement: `the cooler fits the CPU's ${socket} socket`,
+        violation: cooler.supportedSockets.includes(cpu.socket) ? null : rule,
+      };
+    },
+    id: 'cooler-supports-socket',
+    severity: 'incompatible',
+    sources: ['cooler.supportedSockets', 'cpu.socket'],
+  },
+  {
+    evaluate(parts) {
+      const { cooler, cpu } = parts;
+      if (cpu === undefined || cooler === undefined)
+        return null;
+      const rule = `the cooler is rated ${cooler.tdpRatingWatts} W, below the CPU's ${cpu.tdpWatts} W`;
+      return {
+        rule,
+        statement: `the cooler's ${cooler.tdpRatingWatts} W rating covers the CPU's ${cpu.tdpWatts} W`,
+        violation: cooler.tdpRatingWatts < cpu.tdpWatts ? rule : null,
+      };
+    },
+    id: 'cooler-tdp-covers-cpu',
+    severity: 'warning',
+    sources: ['cooler.tdpRatingWatts', 'cpu.tdpWatts'],
+  },
+  {
+    evaluate(parts) {
+      const { motherboard, storage } = parts;
+      if (motherboard === undefined || storage === undefined)
+        return null;
+      const nvme = storage.interface === 'nvme';
+      const offered = nvme ? motherboard.m2Slots : motherboard.sataPorts;
+      const name = nvme ? 'M.2' : 'SATA';
+      const rule = `the board has no ${name} slot for the drive`;
+      return {
+        rule,
+        statement: `the board offers a ${name} slot for the drive`,
+        violation: offered < 1 ? rule : null,
+      };
+    },
+    id: 'storage-interface-offered',
+    severity: 'incompatible',
+    sources: ['storage.interface', 'motherboard.m2Slots', 'motherboard.sataPorts'],
   },
 ];
 
