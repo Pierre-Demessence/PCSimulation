@@ -119,17 +119,23 @@ visualisation tab wires it back in (U4).
 ### U2 — The build list
 
 Shipped. `BuildPanel` maps `partDefinitions()` to a `PartSlot` each: absent slots
-show an Add control, present ones a Card with the whole spec and a Remove button.
-`PartEditor` groups a part's descriptors by slot and renders them all at once;
-each control writes through `applyParameter`, and a refusal keeps the value and
-names the invariant. A `removePart` was added to the data layer (with a `never`
-exhaustiveness guard). Component tests cover add/edit/remove and a refusal.
+show an Add control; present ones are a **compact row** — a status glyph, the part
+label and a one-line summary of its first characteristics — with **Edit** (opens a
+dialog holding the full-spec editor) and Remove. This keeps the left column short
+as parts multiply. The status glyph is per-part compatibility (✓/⚠/✘), derived
+from the sheet's checks by the source fields each names. `PartEditor` groups a
+part's descriptors by slot and renders them all at once inside the dialog; each
+control writes through `applyParameter`, and a refusal keeps the value and names
+the invariant. A `removePart` was added to the data layer (with a `never`
+exhaustiveness guard). Component tests cover add/edit-in-dialog/remove and a
+refusal.
 
-- [x] A build panel of part-slot rows, driven by `partDefinitions()` and the
-      `Build` state; **Add** calls `addPart`, and a populated slot is a Card.
-- [x] A `<PartEditor>` that renders **every** descriptor of a part at once
-      (number Input, shadcn Select, shadcn Checkbox), each writing through
-      `applyParameter`; a refusal keeps the value and shows the reason.
+- [x] A build panel of compact part-slot rows, driven by `partDefinitions()` and
+      the `Build` state; **Add** calls `addPart`, and a populated row shows a
+      status glyph, a summary and an **Edit** button.
+- [x] A `<PartEditor>` (in an Edit dialog) that renders **every** descriptor of a
+      part at once (number Input, shadcn Select, shadcn Checkbox), each writing
+      through `applyParameter`; a refusal keeps the value and shows the reason.
 - [x] Remove-a-part control (`removePart`); an absent slot names the part to add.
 
 ### U3 — The analysis

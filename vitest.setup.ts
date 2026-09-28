@@ -1,6 +1,10 @@
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
-// Radix primitives (shadcn Select, etc.) touch a few DOM APIs jsdom lacks.
+afterEach(cleanup);
+
+// Radix primitives (shadcn Select, Dialog, etc.) touch a few DOM APIs jsdom lacks.
 globalThis.ResizeObserver ??= class {
   observe(): void {}
   unobserve(): void {}
