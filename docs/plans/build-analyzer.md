@@ -202,6 +202,7 @@ export interface CompatRule {
 | B4 | Storage + cooler: interface + ports, socket support, TDP headroom | not started |
 | B5 | Case + physical fit: form factor, GPU length, cooler height, radiator support | not started |
 | B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | not started |
+| UI | Full view-layer rewrite: single-page, windowless, build-list spine + organised analysis (design TBD) | not started |
 
 Each wave is landable on its own and none blocks a run. The bottleneck sim is
 untouched after B1; every later wave adds spec sheets, rules and catalogue
@@ -373,6 +374,56 @@ authoring thousands of parts by hand.
       checks in a matching board; a build assembled from a matched set produces
       the v0.1 numbers for everything the sim reads; the importer is covered by a
       fixture rather than the live dataset, so tests stay offline.
+
+### UI — Full view-layer rewrite (design TBD)
+
+The current UI is unusable and is to be **rebuilt from scratch**. It was grown
+incrementally by different agents doing unrelated tasks, so it is incoherent —
+"a mess on top of a mess" — and it was shaped for the *old* goal (isolate one
+characteristic and watch the bottleneck), which is the opposite of assembling a
+build. This wave is a **view-layer** rewrite only: the data layer stays (the
+`src/sheet/` model, the parameter registry, `compat`/`limits`/`checks`, and all
+of B1–B6). The design is deliberately deferred — this section records the
+requirements, not a layout.
+
+Concrete problems with the current UI (owner's report):
+
+- **Incoherent overall** — no single design; easier to start fresh than patch.
+- **The left menu nests sections within sections within sections** — confusing
+  to navigate.
+- **The main area floods the reader** — `THIS RUN`, then `CEILINGS`, then
+  `CHECKS`, then `PARTS` are stacked as one long vertical scroll, which is both
+  very tall and far too much information at once.
+- **The floating windows get in the way** — they overlap the content.
+- **The bench edits one characteristic at a time** — a part→characteristic→single
+  control flow, which fights "assemble a build from parts".
+
+Requirements for the rebuild:
+
+- **Single-page, fixed layout. Windowless.** No draggable windows overlapping
+  content.
+- **A build-list spine** (PCPartPicker-style): one row per part slot (CPU,
+  Motherboard, Memory, GPU, PSU, …), each either "Add" or showing the chosen
+  part with its **full spec editable at once**, not one field at a time.
+- **Organised analysis, not a flood.** The verdict, checks and limits are
+  present but summary-first and progressively disclosed (tabs, collapsible
+  sections, or a hierarchy) rather than four tall stacked blocks. The reader sees
+  the answer first and drills in for detail.
+- **The visualisation (3D / board) is a secondary panel or tab**, not a
+  competing full-screen face.
+- **Full React, with a component library.** The rewrite moves off vanilla DOM to
+  React so it can adopt a UI component library. `winkit` is Preact and the new
+  layout is windowless, so `winkit` is dropped rather than bridged.
+- **Keep the invariants:** colourblind safety (a word/glyph, never colour alone),
+  and the sheet model as the source of the strings (the renderer formats
+  nothing).
+
+Deferred to the design step (open questions): which component library; the exact
+column/tab layout; how the imperative canvas renderers (`BoardModel`,
+`BoardView`) are wrapped as React components; and whether the sheet model needs a
+summary-first reshaping to feed the new hierarchy. Sequencing note: landing this
+before the remaining part waves (B3–B6) means those parts are added through the
+new UI rather than the old bench.
 
 ## Docs to land with this feature
 
