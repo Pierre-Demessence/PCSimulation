@@ -78,11 +78,11 @@ describe('part bench', () => {
     const next = applied[0];
     if (next === undefined)
       throw new Error('nothing was applied');
-    expect(next.parts.cpu?.clockHz).toBe(5e9);
-    expect(next.parts.cpu?.serviceTimeNs).toBe(0.2);
-    expect(next.parts.caches).toBe(build.parts.caches);
-    expect(next.parts.memory).toBe(build.parts.memory);
-    expect(next.parts.motherboard).toBe(build.parts.motherboard);
+    expect(next.cpu?.cpu.clockHz).toBe(5e9);
+    expect(next.cpu?.cpu.serviceTimeNs).toBe(0.2);
+    expect(next.cpu?.caches).toBe(build.cpu?.caches);
+    expect(next.memory).toBe(build.memory);
+    expect(next.motherboard).toBe(build.motherboard);
   });
 
   it('reports a selection without moving a number', () => {

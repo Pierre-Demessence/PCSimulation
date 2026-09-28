@@ -9,14 +9,17 @@
   - `index.ts` — the public surface of the core.
 - `src/workloads/` — seeded access-stream generation (`rng.ts`, `generate.ts`).
 - `src/data/` — part data and the rules over it.
-  - `build.ts` — the build in progress: a `Partial<HardwareConfig>` plus
-    `hasPart`, `missingParts`, `completeBuild` and `addPart`.
+  - `build.ts` — the build in progress: a set of real parts (`cpu`, `memory`,
+    `motherboard`, any of which may be absent), decoupled from the simulation
+    config. `completeBuild` projects a `HardwareConfig` from the present parts and
+    `toConfigParts` a `Partial<HardwareConfig>` for the rules that still read that
+    shape, plus `hasPart`, `missingParts` and `addPart`.
   - `presets.ts` — the shared constants a part is built from (`BASELINE_CPU`,
     `CACHE_HIERARCHY`, `MEMORY_DEFAULTS`) and `memorySpec`, which builds a DIMM
     spec from the numbers printed on the sticker.
   - `parameters.ts` — the editable characteristic of every part: the descriptor
-    registry, each part's `read`/`write` over a `Partial<HardwareConfig>` so an
-    absent part is expressible, and `applyParameter`.
+    registry, each part's `read`/`write` over the `Build` so an absent part is
+    expressible, and `applyParameter`.
   - `compat.ts` — the motherboard's compatibility rules as one list;
     `validateConfiguration` walks it for the warnings line.
   - `checks.ts` — the rules that carry a plain-language statement, rendered as
@@ -42,7 +45,7 @@
   measured figures and what is missing. It is DOM-free and imports only
   `@/data`, `@/sim`, `@/board`, `@/workloads` and `@/render/format`.
 - `src/testing/` — `build.ts`, the complete machine the tests simulate
-  (`testConfig`, `testParts`, `testBuild`, the generation-matched
+  (`testConfig`, `testBuild`, the generation-matched
   `*_MEMORY`/`*_BOARD` pairs and `GENERATION_PAIRS`). The product ships no
   pre-assembled machine, so the fixture lives with the tests.
 - `src/render/` — everything that draws.

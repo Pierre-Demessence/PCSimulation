@@ -229,8 +229,8 @@ export class ControlPanel {
       ? `Outside this board's spec: ${memoryWarnings.join('; ')}`
       : '';
 
-    const memory = state.build.parts.memory;
-    if (result === null || memory === undefined) {
+    const memory = state.build.memory;
+    if (result === null || memory === null) {
       this.cards.replaceChildren();
       return;
     }

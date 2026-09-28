@@ -64,10 +64,11 @@ export function testConfig(overrides: Partial<HardwareConfig> = {}): HardwareCon
   };
 }
 
-export function testParts(overrides: Partial<HardwareConfig> = {}): Partial<HardwareConfig> {
-  return testConfig(overrides);
-}
-
 export function testBuild(overrides: Partial<HardwareConfig> = {}): Build {
-  return { parts: testConfig(overrides) };
+  const config = testConfig(overrides);
+  return {
+    cpu: { caches: config.caches, cpu: config.cpu },
+    memory: config.memory,
+    motherboard: config.motherboard,
+  };
 }

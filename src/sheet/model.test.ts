@@ -2,7 +2,7 @@ import type { BuildSheet } from './model';
 
 import type { Build } from '@/data';
 import { describe, expect, it } from 'vitest';
-import { applyParameter, completeBuild, partDefinitions } from '@/data';
+import { applyParameter, completeBuild, emptyBuild, partDefinitions } from '@/data';
 import { simulate } from '@/sim';
 import { DDR5_BOARD, DDR5_MEMORY, testBuild } from '@/testing/build';
 
@@ -58,7 +58,7 @@ function sheetStrings(sheet: BuildSheet): readonly string[] {
 
 describe('buildSheet', () => {
   it('says what a build with no parts is missing', () => {
-    const build: Build = { parts: {} };
+    const build = emptyBuild();
     const sheet = buildSheet({ build, origin: {}, result: null, workload: 'streaming' });
 
     expect(sheet.missing).toEqual(['cpu', 'memory', 'motherboard']);
@@ -89,7 +89,7 @@ describe('buildSheet', () => {
   it('writes one row per present descriptor', () => {
     const build = testBuild();
     const expected = partDefinitions()
-      .filter(definition => definition.read(build.parts) !== null)
+      .filter(definition => definition.read(build) !== null)
       .reduce((total, definition) => total + definition.parameters.length, 0);
 
     const rows = DDR4_RUN.sheet.parts.reduce((total, section) => total + section.rows.length, 0);

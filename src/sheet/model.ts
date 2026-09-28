@@ -3,7 +3,7 @@ import type { LevelId, SimResult } from '@/sim';
 import type { WorkloadKind } from '@/workloads';
 
 import { boardLayout } from '@/board';
-import { buildChecks, buildLimits, completeBuild, missingParts, partDefinition, partDefinitions } from '@/data';
+import { buildChecks, buildLimits, completeBuild, missingParts, partDefinition, partDefinitions, toConfigParts } from '@/data';
 import {
   formatBandwidth,
   formatCount,
@@ -107,7 +107,7 @@ function renderValue(parameter: Parameter<unknown>, part: unknown): string {
 function partSections(input: BuildSheetInput): readonly PartSection[] {
   const sections: PartSection[] = [];
   for (const definition of partDefinitions()) {
-    const part = definition.read(input.build.parts);
+    const part = definition.read(input.build);
     if (part === null)
       continue;
     sections.push({
@@ -207,7 +207,7 @@ export function buildSheet(input: BuildSheetInput): BuildSheet {
 
   const ceilings: RenderedLimit[] = [];
   const floors: RenderedLimit[] = [];
-  for (const limit of buildLimits(build.parts)) {
+  for (const limit of buildLimits(toConfigParts(build))) {
     (limit.kind === 'ceiling' ? ceilings : floors).push(renderedLimit(limit));
   }
 
@@ -216,7 +216,7 @@ export function buildSheet(input: BuildSheetInput): BuildSheet {
 
   return {
     ceilings,
-    checks: buildChecks(build.parts),
+    checks: buildChecks(toConfigParts(build)),
     floors,
     limiterId: result === null ? null : result.bottleneckId,
     measured: result === null ? [] : measuredFigures(result),

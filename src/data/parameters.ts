@@ -3,7 +3,6 @@ import type {
   CacheHierarchy,
   CacheSpec,
   CpuSpec,
-  HardwareConfig,
   LevelId,
   MemoryGeneration,
   MemorySpec,
@@ -102,8 +101,8 @@ export interface PartDefinition<Part> {
    */
   readonly blank: Part;
   /** Null when any slot this part owns is missing, which is what `hasPart` is. */
-  readonly read: (parts: Partial<HardwareConfig>) => Part | null;
-  readonly write: (parts: Partial<HardwareConfig>, part: Part) => Partial<HardwareConfig>;
+  readonly read: (build: Build) => Part | null;
+  readonly write: (build: Build, part: Part) => Build;
 }
 
 export interface ParameterApplication {
@@ -308,12 +307,9 @@ const cpuPart: PartDefinition<CpuPart> = {
     }),
     ...CACHE_LEVELS.flatMap(level => cacheParameters(level)),
   ],
-  read: (parts) => {
-    const { caches, cpu } = parts;
-    return caches === undefined || cpu === undefined ? null : { caches, cpu };
-  },
+  read: build => build.cpu,
   slots: ['cpu', 'l1', 'l2', 'l3'],
-  write: (parts, part) => ({ ...parts, caches: part.caches, cpu: part.cpu }),
+  write: (build, part) => ({ ...build, cpu: part }),
 };
 
 /** `id` is derived from the sticker numbers, so every edit rebuilds it with them. */
@@ -434,9 +430,9 @@ const memoryPart: PartDefinition<MemorySpec> = {
       with: (part, value) => withMemory(part, { maxOutstandingMisses: value }),
     }),
   ],
-  read: parts => parts.memory ?? null,
+  read: build => build.memory,
   slots: ['memory'],
-  write: (parts, part) => ({ ...parts, memory: part }),
+  write: (build, part) => ({ ...build, memory: part }),
 };
 
 const motherboardPart: PartDefinition<MotherboardSpec> = {
@@ -512,9 +508,9 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
       }),
     }),
   ],
-  read: parts => parts.motherboard ?? null,
+  read: build => build.motherboard,
   slots: ['motherboard'],
-  write: (parts, part) => ({ ...parts, motherboard: part }),
+  write: (build, part) => ({ ...build, motherboard: part }),
 };
 
 /**
@@ -570,7 +566,7 @@ export function applyParameter(
   value: ParameterValue,
 ): ParameterApplication {
   const definition = partDefinition(part);
-  const current = definition.read(build.parts);
+  const current = definition.read(build);
 
   // An absent part is a refusal rather than a throw: this function is public and
   // its tests drive it directly, and the bench makes the case unreachable.
@@ -586,12 +582,12 @@ export function applyParameter(
   // value the compiler has not narrowed to one member. `read` and `write` are
   // already callable on `unknown`, so nothing else needs to be erased.
   const erased = parameter as unknown as ErasedParameter;
-  const parts = definition.write(build.parts, erased.with(current, coerce(erased, value)));
+  const next = definition.write(build, erased.with(current, coerce(erased, value)));
 
-  const refused = refusalFor(parts, erased);
+  const refused = refusalFor(next, erased);
   if (refused !== null)
     return { build, refused };
-  return { build: { ...build, parts }, refused: null };
+  return { build: next, refused: null };
 }
 
 function coerce(parameter: ErasedParameter, value: ParameterValue): unknown {
@@ -622,13 +618,13 @@ function clampToDescriptor(parameter: ErasedParameter, value: number): number {
  * The invariants a descriptor cannot express. Everything else is either clamped
  * by the descriptor's range or a warning the run continues through.
  */
-function refusalFor(parts: Partial<HardwareConfig>, parameter: ErasedParameter): string | null {
-  const board = parts.motherboard;
-  if (parameter.id === 'allowedGenerations' && board !== undefined && board.allowedGenerations.length < 1)
+function refusalFor(build: Build, parameter: ErasedParameter): string | null {
+  const board = build.motherboard;
+  if (parameter.id === 'allowedGenerations' && board !== null && board.allowedGenerations.length < 1)
     return 'a board must accept at least one memory generation';
 
   const level = cacheLevelOf(parameter.group);
-  const caches = parts.caches;
+  const caches = build.cpu?.caches;
   if (level === null || caches === undefined)
     return null;
 

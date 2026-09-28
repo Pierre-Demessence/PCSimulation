@@ -20,18 +20,18 @@ function configOf(build: Build): HardwareConfig {
   return config;
 }
 
-function slotOf(parts: Partial<HardwareConfig>, slot: SlotId): unknown {
+function slotOf(build: Build, slot: SlotId): unknown {
   if (slot === 'cpu')
-    return parts.cpu;
+    return build.cpu?.cpu;
   if (slot === 'l1')
-    return parts.caches?.l1;
+    return build.cpu?.caches.l1;
   if (slot === 'l2')
-    return parts.caches?.l2;
+    return build.cpu?.caches.l2;
   if (slot === 'l3')
-    return parts.caches?.l3;
+    return build.cpu?.caches.l3;
   if (slot === 'memory')
-    return parts.memory;
-  return parts.motherboard;
+    return build.memory;
+  return build.motherboard;
 }
 
 /**
@@ -77,7 +77,7 @@ describe('parameter registry', () => {
           const applied = applyParameter(testBuild(), definition.id, parameter.id, value);
 
           expect(applied.refused, label).toBeNull();
-          expect(parameter.get(definition.read(applied.build.parts)), label).toEqual(value);
+          expect(parameter.get(definition.read(applied.build)), label).toEqual(value);
         }
       }
     }
@@ -86,14 +86,14 @@ describe('parameter registry', () => {
   it('changes exactly one characteristic and nothing else', () => {
     const build = testBuild();
     for (const definition of partDefinitions()) {
-      const before = definition.read(build.parts);
+      const before = definition.read(build);
       for (const parameter of definition.parameters) {
         const label = `${definition.id}.${parameter.id}`;
         const value = changedValue(parameter, parameter.get(before));
         const applied = applyParameter(build, definition.id, parameter.id, value);
         expect(applied.refused, label).toBeNull();
 
-        const after = definition.read(applied.build.parts);
+        const after = definition.read(applied.build);
         for (const other of definition.parameters) {
           if (other.id === parameter.id)
             continue;
@@ -110,7 +110,7 @@ describe('parameter registry', () => {
       if (first === undefined)
         throw new Error(`${definition.id} has no characteristics`);
 
-      const before = definition.read(build.parts);
+      const before = definition.read(build);
       const applied = applyParameter(
         build,
         definition.id,
@@ -123,8 +123,8 @@ describe('parameter registry', () => {
         if (definition.slots.includes(slot))
           continue;
         // Identity, not equality: a write must not rebuild a slot it does not own.
-        expect(slotOf(applied.build.parts, slot), `${definition.id} touched ${slot}`).toBe(
-          slotOf(build.parts, slot),
+        expect(slotOf(applied.build, slot), `${definition.id} touched ${slot}`).toBe(
+          slotOf(build, slot),
         );
       }
     }
@@ -144,10 +144,10 @@ describe('parameter registry', () => {
         const label = `${definition.id}.${parameter.id}`;
 
         const low = applyParameter(build, definition.id, parameter.id, -1e12);
-        expect(parameter.get(definition.read(low.build.parts)), label).toBe(parameter.min);
+        expect(parameter.get(definition.read(low.build)), label).toBe(parameter.min);
 
         const high = applyParameter(build, definition.id, parameter.id, 1e12);
-        const clamped = parameter.get(definition.read(high.build.parts)) as number;
+        const clamped = parameter.get(definition.read(high.build)) as number;
         expect(clamped, label).toBe(parameter.max);
         expect(isOnGrid(clamped, parameter.min, parameter.step), label).toBe(true);
       }

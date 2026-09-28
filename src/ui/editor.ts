@@ -143,7 +143,7 @@ export class PartEditor {
       this.mountControl(parameter);
     }
 
-    const value = definition.read(build.parts);
+    const value = definition.read(build);
     this.setAbsent(value === null);
     if (value !== null)
       this.publishValue(parameter, value);
@@ -278,7 +278,7 @@ export class PartEditor {
       // valid value and name the invariant that stopped it.
       this.refusal.textContent = `Refused: ${applied.refused}`;
       const parameter = definition.parameters.find(candidate => candidate.id === this.characteristic);
-      const current = definition.read(build.parts);
+      const current = definition.read(build);
       if (parameter !== undefined && current !== null)
         this.publishValue(parameter, current);
       return;
