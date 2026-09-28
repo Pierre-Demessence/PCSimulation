@@ -9,6 +9,12 @@ export type MemoryGeneration = 'ddr3' | 'ddr4' | 'ddr5';
 /** CPU and motherboard socket. Compatibility-only: the simulation never reads it. */
 export type Socket = 'am4' | 'am5' | 'lga1200' | 'lga1700' | 'lga1851';
 
+/** PCIe generation. Compatibility-only. */
+export type PcieVersion = 3 | 4 | 5;
+
+/** A power lead a part needs or a supply provides. Compatibility-only. */
+export type PowerConnector = '12vhpwr' | 'atx-24' | 'eps-8' | 'pcie-6' | 'pcie-8';
+
 /** Levels that participate in the access path, plus the issuing core. */
 export type LevelId = 'l1' | 'l2' | 'l3' | 'memory' | 'cpu';
 
@@ -48,6 +54,10 @@ export interface CpuSpec {
   readonly socket: Socket;
   /** Compatibility-only: the generations the controller accepts. */
   readonly memoryGenerations: readonly MemoryGeneration[];
+  /** Compatibility-only: rated power, for the supply and cooler budgets. */
+  readonly tdpWatts: number;
+  /** Compatibility-only: whether the CPU can drive a display without a GPU. */
+  readonly integratedGraphics: boolean;
   readonly clockHz: number;
   readonly cores: number;
   readonly serviceTimeNs: number;
@@ -61,6 +71,11 @@ export interface MotherboardSpec {
   readonly dimmSlots: number;
   readonly maxChannels: number;
   readonly maxMtPerSecond: number;
+  /** Compatibility-only: the slot generation and lane budget for a graphics card. */
+  readonly pcieVersion: PcieVersion;
+  readonly pcieLanes: number;
+  /** Compatibility-only: the leads the supply must provide for the board. */
+  readonly powerConnectors: readonly PowerConnector[];
 }
 
 export interface CacheHierarchy {

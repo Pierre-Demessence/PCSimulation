@@ -198,7 +198,7 @@ export interface CompatRule {
 | --- | --- | --- |
 | B1 | Spine flip: `Build` decouples from `HardwareConfig`; `completeBuild` becomes a projection; the sim keeps its input | shipped |
 | B2 | Compatibility vocabulary + engine: sockets, chipsets, form factors, connectors, severity; CPU↔board socket the first new check | shipped |
-| B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | not started |
+| B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | shipped |
 | B4 | Storage + cooler: interface + ports, socket support, TDP headroom | not started |
 | B5 | Case + physical fit: form factor, GPU length, cooler height, radiator support | not started |
 | B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | not started |
@@ -273,22 +273,32 @@ rules read them, so no orphan field ships.
 
 ### B3 — GPU and PSU as real parts
 
-- [ ] Add `GpuSpec` (identity, PCIe version + lanes wanted, length mm, power
-      connectors required, board power draw) and `PsuSpec` (wattage, connector
-      inventory) to `src/data/parts/specs.ts`; extend `Build`.
-- [ ] Grow `PartId` to `gpu` and `psu` and register each as a `PartDefinition`
-      that owns **zero** sim slots, so the picker and editor reach them while the
-      slot-ownership walk still covers only the sim parts.
-- [ ] Checks: GPU PCIe generation/lanes against the board's budget; every GPU
-      power connector present on the PSU; **summed part wattage ≤ PSU wattage**
-      (CPU TDP + GPU draw + a base); and **a display output exists** (a dedicated
-      GPU or the CPU's `integratedGraphics`). All `warning` or `incompatible` as
-      fits; none blocks.
-- [ ] The GPU and PSU render as `UnmodeledSection`s (facts, no verdict) until a
-      simulation wave reaches them — `src/sheet/model.ts@43` already models this.
-- [ ] Tests: a missing connector is explained; wattage over budget is
-      `incompatible`; a CPU without `integratedGraphics` and no GPU warns about
-      no display; a GPU with facts carries no verdict string.
+Shipped. GPU and PSU are the first **sim-less** parts: they own no
+`HardwareConfig` slot (`slots: []`), so the rule engine moved off
+`Partial<HardwareConfig>` onto a `CompatParts` view (`= Partial<HardwareConfig> &
+{ gpu?, psu? }`) that `toConfigParts` now carries; `HardwareConfig` stays
+assignable to it, so the shipped rule tests were untouched. The parameter
+`group` was decoupled from `SlotId` to a plain string so a sim-less part can
+group its own descriptors. CPU grew `tdpWatts` + `integratedGraphics`, the board
+grew `pcieVersion`/`pcieLanes`/`powerConnectors`; `watts`/`mm` units were added.
+
+- [x] Add `GpuSpec` and `PsuSpec` to `src/data/parts/specs.ts`; extend `Build`
+      with `gpu`/`psu` (nullable), `emptyBuild`, `removePart` (the `never` guard
+      forced the new cases), and `toConfigParts`.
+- [x] Grow `PartId` to `gpu`/`psu` and register each as a `PartDefinition` with
+      `slots: []`; the slot-ownership walk still covers only the sim parts. The
+      picker, the editor and the Parts tab reach them automatically.
+- [x] Checks: display output (a GPU or the CPU's `integratedGraphics`), GPU
+      lanes and PCIe generation against the board, every GPU **and** board power
+      connector present on the PSU (multiset coverage), and summed wattage
+      (CPU TDP + GPU draw + a base) ≤ the PSU rating. All `warning` or
+      `incompatible`; none blocks. `psu-wattage` fires only once a CPU is present.
+- [x] The GPU and PSU appear as ordinary part sections with `validated` /
+      `display-only` effect flags — the honesty the old `UnmodeledSection` gave is
+      now carried by the effect flags, since the sim reads none of their fields.
+- [x] Tests: a missing GPU and board connector are explained, over-budget wattage
+      and lane/PCIe-generation shortfalls warn, and a CPU without integrated
+      graphics and no GPU warns about no display.
 
 ### B4 — Storage and cooler
 

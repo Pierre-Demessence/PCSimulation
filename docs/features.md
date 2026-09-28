@@ -7,21 +7,25 @@ Product-level feature list. One line per feature: name — description — owner
 - **Workload profiles** — seeded streaming, dependent random and mixed access
   streams, so two builds are always compared on identical work. — owner: Pierre
 - **Assembled builds** — a build holds one part per kind (CPU, memory,
-  motherboard), each "Not added" until the reader adds it and fills in its
-  values; a part that is absent contributes no limits of its own, and until all
-  three are in there is no run and no verdict — the sheet says what to add.
-  — owner: Pierre
+  motherboard, and the compatibility-only graphics card and power supply), each
+  "Not added" until the reader adds it and fills in its values; a part that is
+  absent contributes no checks of its own, and the memory path (CPU, memory,
+  motherboard) must be present for a bottleneck run — a graphics card or supply
+  is optional and only feeds the compatibility checks. — owner: Pierre
 - **Bottleneck classification** — reports per-resource utilisation, then labels
   the run resource-bound (naming the saturated part) or latency-bound (naming
   the dependency chain). — owner: Pierre
 - **Compatibility checks** — part-against-part rules stated as met or broken and
   sourced to the fields they read: the CPU socket against the board, the CPU's
   memory-controller support and the board's acceptance against the DIMM's
-  generation, and the board's channel and speed caps. Each carries a severity —
-  `not compatible` for parts that cannot work together, `out of spec` for a part
-  that works below spec — as a word beside a ✓/✘ glyph, never colour alone. A
-  part outside spec is still simulated: the comparison is the lesson, so nothing
-  is blocked. — owner: Pierre
+  generation, the board's channel and speed caps, the graphics card's PCIe lanes
+  and generation against the board, every card and board power lead against the
+  supply's connectors, the summed wattage against the supply's rating, and
+  whether any part can drive a display. Each carries a severity — `not compatible`
+  for parts that cannot work together, `out of spec` for a part that works below
+  spec — as a word beside a ✓/✘ glyph, never colour alone. A part outside spec is
+  still simulated: the comparison is the lesson, so nothing is blocked.
+  — owner: Pierre
 - **Results readout** — cards for time to finish, achieved bandwidth, mean
   latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
   with a tooltip stating what it means and its unit. The build sheet restates the

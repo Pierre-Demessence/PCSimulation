@@ -1,6 +1,34 @@
-import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
+import type { CompatParts } from './parts/specs';
 
-type Parts = Partial<HardwareConfig>;
+import type { MemorySpec, MotherboardSpec, PowerConnector } from '@/sim';
+
+type Parts = CompatParts;
+
+/** A base draw for the parts a build does not model (board, fans, drives). */
+const BASE_WATTS = 80;
+
+const CONNECTOR_LABEL: Record<PowerConnector, string> = {
+  '12vhpwr': '12VHPWR',
+  'atx-24': '24-pin ATX',
+  'eps-8': '8-pin EPS',
+  'pcie-6': '6-pin PCIe',
+  'pcie-8': '8-pin PCIe',
+};
+
+/** The first required connector the available set cannot cover, honouring counts. */
+function firstUncovered(
+  required: readonly PowerConnector[],
+  available: readonly PowerConnector[],
+): PowerConnector | null {
+  const pool = [...available];
+  for (const need of required) {
+    const index = pool.indexOf(need);
+    if (index === -1)
+      return need;
+    pool.splice(index, 1);
+  }
+  return null;
+}
 
 /**
  * What one rule makes of a configuration. `rule` is the rule's own wording for
@@ -215,16 +243,111 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
     parts => parts.memory?.maxOutstandingMisses,
     'memory needs at least one outstanding-miss slot',
   ),
+  {
+    evaluate(parts) {
+      const { cpu, gpu } = parts;
+      if (cpu === undefined)
+        return null;
+      const rule = 'no display output: add a graphics card or a CPU with integrated graphics';
+      return {
+        rule,
+        statement: 'a display output is available',
+        violation: gpu !== undefined || cpu.integratedGraphics ? null : rule,
+      };
+    },
+    id: 'display-output',
+    severity: 'warning',
+    sources: ['cpu.integratedGraphics', 'gpu.pcieLanes'],
+  },
+  {
+    evaluate(parts) {
+      const { gpu, motherboard } = parts;
+      if (gpu === undefined || motherboard === undefined)
+        return null;
+      const rule = `the card wants ${gpu.pcieLanes} PCIe lanes, and the board provides ${motherboard.pcieLanes}`;
+      return {
+        rule,
+        statement: `${gpu.pcieLanes} PCIe lanes, and the board provides ${motherboard.pcieLanes}`,
+        violation: gpu.pcieLanes > motherboard.pcieLanes ? rule : null,
+      };
+    },
+    id: 'gpu-lanes-available',
+    severity: 'warning',
+    sources: ['gpu.pcieLanes', 'motherboard.pcieLanes'],
+  },
+  {
+    evaluate(parts) {
+      const { gpu, motherboard } = parts;
+      if (gpu === undefined || motherboard === undefined)
+        return null;
+      const rule = `the board's PCIe ${motherboard.pcieVersion} slot is older than the card's PCIe ${gpu.pcieVersion}, so the link runs slower`;
+      return {
+        rule,
+        statement: `PCIe ${gpu.pcieVersion} card in a PCIe ${motherboard.pcieVersion} slot`,
+        violation: motherboard.pcieVersion < gpu.pcieVersion ? rule : null,
+      };
+    },
+    id: 'gpu-pcie-generation',
+    severity: 'warning',
+    sources: ['gpu.pcieVersion', 'motherboard.pcieVersion'],
+  },
+  {
+    evaluate(parts) {
+      const { gpu, psu } = parts;
+      if (gpu === undefined || psu === undefined)
+        return null;
+      const missing = firstUncovered(gpu.powerConnectors, psu.connectors);
+      const rule = missing === null
+        ? 'the supply provides the card power leads'
+        : `the card needs a ${CONNECTOR_LABEL[missing]} the supply does not provide`;
+      return { rule, statement: 'the supply provides the card power leads', violation: missing === null ? null : rule };
+    },
+    id: 'gpu-power-connectors',
+    severity: 'incompatible',
+    sources: ['gpu.powerConnectors', 'psu.connectors'],
+  },
+  {
+    evaluate(parts) {
+      const { motherboard, psu } = parts;
+      if (motherboard === undefined || psu === undefined)
+        return null;
+      const missing = firstUncovered(motherboard.powerConnectors, psu.connectors);
+      const rule = missing === null
+        ? 'the supply provides the board power leads'
+        : `the board needs a ${CONNECTOR_LABEL[missing]} the supply does not provide`;
+      return { rule, statement: 'the supply provides the board power leads', violation: missing === null ? null : rule };
+    },
+    id: 'board-power-connectors',
+    severity: 'incompatible',
+    sources: ['motherboard.powerConnectors', 'psu.connectors'],
+  },
+  {
+    evaluate(parts) {
+      const { cpu, psu } = parts;
+      if (psu === undefined || cpu === undefined)
+        return null;
+      const draw = cpu.tdpWatts + (parts.gpu?.boardPowerWatts ?? 0) + BASE_WATTS;
+      const rule = `the parts draw about ${draw} W, and the supply is rated ${psu.wattage} W`;
+      return {
+        rule,
+        statement: `about ${draw} W drawn, ${psu.wattage} W supplied`,
+        violation: draw > psu.wattage ? rule : null,
+      };
+    },
+    id: 'psu-wattage',
+    severity: 'warning',
+    sources: ['psu.wattage', 'cpu.tdpWatts', 'gpu.boardPowerWatts'],
+  },
 ];
 
 /**
  * Applies the motherboard's rules to a configuration. Empty means the board
  * accepts the parts; otherwise every violation is explained in plain language.
  */
-export function validateConfiguration(config: HardwareConfig): string[] {
+export function validateConfiguration(parts: Parts): string[] {
   const problems: string[] = [];
   for (const rule of CONFIGURATION_RULES) {
-    const outcome = rule.evaluate(config);
+    const outcome = rule.evaluate(parts);
     if (outcome !== null && outcome.violation !== null)
       problems.push(outcome.violation);
   }

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { applyParameter, completeBuild, partDefinitions } from '@/data';
 
 import { simulate } from '@/sim';
-import { testBuild } from '@/testing/build';
+import { testFullBuild as testBuild } from '@/testing/build';
 import { generateAccesses, streamingSpec } from '@/workloads';
 import { CYCLES_PER_ISSUE } from './presets';
 

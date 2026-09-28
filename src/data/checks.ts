@@ -1,6 +1,6 @@
 import type { RuleSeverity } from './compat';
+import type { CompatParts } from './parts/specs';
 
-import type { HardwareConfig } from '@/sim';
 import { CONFIGURATION_RULES } from './compat';
 
 /** A rule that can be met or broken, stated so the reader can check it. */
@@ -31,7 +31,7 @@ export interface Check {
  * A rule whose fields are not all present yields no row, so a partial build
  * lists only the checks its parts can support.
  */
-export function buildChecks(parts: Partial<HardwareConfig>): readonly Check[] {
+export function buildChecks(parts: CompatParts): readonly Check[] {
   const checks: Check[] = [];
   for (const rule of CONFIGURATION_RULES) {
     const outcome = rule.evaluate(parts);

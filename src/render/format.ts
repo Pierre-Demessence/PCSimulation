@@ -65,9 +65,11 @@ export function formatUnit(value: number, unit: ParameterUnit): string {
     case 'count': return formatCount(value);
     case 'cycles': return `${formatCount(value)} cycles`;
     case 'hz': return formatHz(value);
+    case 'mm': return `${value} mm`;
     case 'mt-per-s': return `${formatCount(value)} MT/s`;
     case 'ns': return `${value} ns`;
     case 'per-ns': return `${trimUnit(value)} per ns`;
+    case 'watts': return `${value} W`;
   }
 }
 

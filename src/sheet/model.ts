@@ -211,7 +211,10 @@ export function buildSheet(input: BuildSheetInput): BuildSheet {
     (limit.kind === 'ceiling' ? ceilings : floors).push(renderedLimit(limit));
   }
 
-  const missing = missingParts(build);
+  // Only the memory-path parts block a run; a graphics card or supply is optional.
+  const missing = missingParts(build).filter(
+    part => part === 'cpu' || part === 'memory' || part === 'motherboard',
+  );
   const partCount = parts.length;
 
   return {

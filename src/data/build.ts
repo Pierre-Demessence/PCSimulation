@@ -1,4 +1,5 @@
 import type { CpuPart, PartId } from './parameters';
+import type { CompatParts, GpuSpec, PsuSpec } from './parts/specs';
 
 import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 import { partDefinition, partDefinitions } from './parameters';
@@ -15,11 +16,13 @@ export interface Build {
   readonly cpu: CpuPart | null;
   readonly memory: MemorySpec | null;
   readonly motherboard: MotherboardSpec | null;
+  readonly gpu: GpuSpec | null;
+  readonly psu: PsuSpec | null;
 }
 
 /** Where every build starts: nothing added. */
 export function emptyBuild(): Build {
-  return { cpu: null, memory: null, motherboard: null };
+  return { cpu: null, memory: null, motherboard: null, gpu: null, psu: null };
 }
 
 /**
@@ -51,13 +54,13 @@ export function completeBuild(build: Build): HardwareConfig | null {
 }
 
 /**
- * The present parts as a partial `HardwareConfig`, for the rules that still read
- * that shape (`buildLimits`, `buildChecks`, `validateConfiguration`). A sim-less
- * part contributes nothing here; its own rules read the `Build` directly when
- * they arrive.
+ * The present parts as a compatibility view, for the rules that walk it
+ * (`buildChecks`, `validateConfiguration`) and the sim-path limits
+ * (`buildLimits`, which ignores the sim-less parts). A part contributes nothing
+ * until it is added.
  */
-export function toConfigParts(build: Build): Partial<HardwareConfig> {
-  const parts: { -readonly [K in keyof HardwareConfig]?: HardwareConfig[K] } = {};
+export function toConfigParts(build: Build): CompatParts {
+  const parts: { -readonly [K in keyof CompatParts]?: CompatParts[K] } = {};
   if (build.cpu !== null) {
     parts.cpu = build.cpu.cpu;
     parts.caches = build.cpu.caches;
@@ -66,6 +69,10 @@ export function toConfigParts(build: Build): Partial<HardwareConfig> {
     parts.memory = build.memory;
   if (build.motherboard !== null)
     parts.motherboard = build.motherboard;
+  if (build.gpu !== null)
+    parts.gpu = build.gpu;
+  if (build.psu !== null)
+    parts.psu = build.psu;
   return parts;
 }
 
@@ -89,6 +96,10 @@ export function removePart(build: Build, part: PartId): Build {
       return { ...build, memory: null };
     case 'motherboard':
       return { ...build, motherboard: null };
+    case 'gpu':
+      return { ...build, gpu: null };
+    case 'psu':
+      return { ...build, psu: null };
     default: {
       // Forces this switch to be revisited when a new part kind is added.
       const unreachable: never = part;

@@ -1,4 +1,4 @@
-import type { Build, Parameter, ParameterValue, PartId, SlotId } from '@/data';
+import type { Build, Parameter, ParameterValue, PartId } from '@/data';
 
 import { useState } from 'react';
 
@@ -6,17 +6,31 @@ import { applyParameter, partDefinition } from '@/data';
 
 import { ParameterField } from './ParameterField';
 
-const GROUP_LABELS: Record<SlotId, string> = {
-  cpu: 'Core',
-  l1: 'L1 cache',
-  l2: 'L2 cache',
-  l3: 'L3 cache',
-  memory: 'Memory',
-  motherboard: 'Motherboard',
-};
+function groupLabel(group: string): string {
+  switch (group) {
+    case 'cpu':
+      return 'Core';
+    case 'l1':
+      return 'L1 cache';
+    case 'l2':
+      return 'L2 cache';
+    case 'l3':
+      return 'L3 cache';
+    case 'memory':
+      return 'Memory';
+    case 'motherboard':
+      return 'Motherboard';
+    case 'gpu':
+      return 'Graphics card';
+    case 'psu':
+      return 'Power supply';
+    default:
+      return group;
+  }
+}
 
 interface ParameterGroup {
-  readonly group: SlotId;
+  readonly group: string;
   readonly parameters: Parameter<unknown>[];
 }
 
@@ -74,7 +88,7 @@ export function PartEditor({
         <fieldset key={group} className="flex flex-col gap-3">
           {groups.length > 1 && (
             <legend className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              {GROUP_LABELS[group]}
+              {groupLabel(group)}
             </legend>
           )}
           {parameters.map(parameter => (

@@ -1,3 +1,4 @@
+import type { GpuSpec, PsuSpec } from '@/data';
 import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
@@ -10,6 +11,23 @@ import { validateConfiguration } from './compat';
 function configWith(memory: MemorySpec): HardwareConfig {
   return { ...testConfig(), memory };
 }
+
+const BASE_GPU: GpuSpec = {
+  boardPowerWatts: 200,
+  id: 'gpu',
+  identity: 'Test GPU',
+  lengthMm: 280,
+  pcieLanes: 16,
+  pcieVersion: 4,
+  powerConnectors: ['pcie-8'],
+};
+
+const BASE_PSU: PsuSpec = {
+  connectors: ['atx-24', 'eps-8', 'pcie-8'],
+  id: 'psu',
+  identity: 'Test PSU',
+  wattage: 650,
+};
 
 describe('validateConfiguration', () => {
   it('accepts every generation on its own board', () => {
@@ -41,6 +59,9 @@ describe('validateConfiguration', () => {
       id: 'mb-narrow',
       maxChannels: 4,
       maxMtPerSecond: 3200,
+      pcieLanes: 20,
+      pcieVersion: 4,
+      powerConnectors: ['atx-24', 'eps-8'],
       socket: 'lga1700',
     };
     const problems = validateConfiguration({
@@ -78,5 +99,49 @@ describe('validateConfiguration', () => {
       testConfig({ cpu: { ...BASELINE_CPU, memoryGenerations: ['ddr5'] } }),
     );
     expect(problems).toContain('the CPU\'s memory controller does not support DDR4');
+  });
+
+  it('rejects a card whose power lead the supply lacks', () => {
+    const gpu: GpuSpec = { ...BASE_GPU, powerConnectors: ['12vhpwr'] };
+    const problems = validateConfiguration({ gpu, psu: BASE_PSU });
+    expect(problems.some(problem => problem.includes('12VHPWR'))).toBe(true);
+  });
+
+  it('rejects a board whose power lead the supply lacks', () => {
+    const problems = validateConfiguration({
+      motherboard: testConfig().motherboard,
+      psu: { ...BASE_PSU, connectors: ['atx-24'] },
+    });
+    expect(problems.some(problem => problem.includes('EPS'))).toBe(true);
+  });
+
+  it('warns when the card wants more lanes than the board provides', () => {
+    const problems = validateConfiguration({
+      gpu: { ...BASE_GPU, pcieLanes: 32 },
+      motherboard: testConfig().motherboard,
+    });
+    expect(problems.some(problem => problem.includes('PCIe lanes'))).toBe(true);
+  });
+
+  it('warns when the board slot is an older PCIe generation than the card', () => {
+    const problems = validateConfiguration({
+      gpu: { ...BASE_GPU, pcieVersion: 5 },
+      motherboard: testConfig().motherboard,
+    });
+    expect(problems.some(problem => problem.includes('older'))).toBe(true);
+  });
+
+  it('warns when the parts draw more than the supply provides', () => {
+    const problems = validateConfiguration({
+      cpu: BASELINE_CPU,
+      gpu: { ...BASE_GPU, boardPowerWatts: 400 },
+      psu: { ...BASE_PSU, wattage: 200 },
+    });
+    expect(problems.some(problem => problem.includes('rated 200 W'))).toBe(true);
+  });
+
+  it('warns when no part can drive a display', () => {
+    const problems = validateConfiguration({ cpu: { ...BASELINE_CPU, integratedGraphics: false } });
+    expect(problems).toContain('no display output: add a graphics card or a CPU with integrated graphics');
   });
 });

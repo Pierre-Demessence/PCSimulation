@@ -13,6 +13,9 @@ const DDR4_BOARD: MotherboardSpec = {
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
+  pcieLanes: 20,
+  pcieVersion: 4,
+  powerConnectors: ['atx-24', 'eps-8'],
   socket: 'lga1700',
 };
 
@@ -22,6 +25,9 @@ const DDR5_BOARD: MotherboardSpec = {
   id: 'mb-ddr5',
   maxChannels: 4,
   maxMtPerSecond: 6000,
+  pcieLanes: 20,
+  pcieVersion: 5,
+  powerConnectors: ['atx-24', 'eps-8'],
   socket: 'lga1700',
 };
 

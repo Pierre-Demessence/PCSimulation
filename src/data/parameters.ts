@@ -1,4 +1,5 @@
 import type { Build } from './build';
+import type { GpuSpec, PsuSpec } from './parts/specs';
 import type {
   CacheHierarchy,
   CacheSpec,
@@ -7,6 +8,8 @@ import type {
   MemoryGeneration,
   MemorySpec,
   MotherboardSpec,
+  PcieVersion,
+  PowerConnector,
   Socket,
 } from '@/sim';
 
@@ -17,7 +20,7 @@ import { BASELINE_CPU, CACHE_HIERARCHY, CYCLES_PER_ISSUE, memorySpec } from './p
  * What the user picks and swaps. A part owns one or more slots; the CPU owns its
  * three cache levels, because that is where they are.
  */
-export type PartId = 'cpu' | 'memory' | 'motherboard';
+export type PartId = 'cpu' | 'gpu' | 'memory' | 'motherboard' | 'psu';
 
 /** What the model consumes: one entry per position of `HardwareConfig`. */
 export type SlotId = LevelId | 'motherboard';
@@ -38,9 +41,11 @@ export type ParameterUnit
     | 'count'
     | 'cycles'
     | 'hz'
+    | 'mm'
     | 'mt-per-s'
     | 'ns'
-    | 'per-ns';
+    | 'per-ns'
+    | 'watts';
 
 export type ParameterValue = number | string | readonly string[];
 
@@ -48,8 +53,8 @@ interface ParameterBase<Part, Value> {
   readonly id: string;
   readonly label: string;
   readonly help: string;
-  /** The slot this characteristic belongs to; it is how the part's list groups. */
-  readonly group: SlotId;
+  /** The group this characteristic belongs to; it is how the part's list groups. */
+  readonly group: string;
   readonly effect: ParameterEffect;
   readonly get: (part: Part) => Value;
   /** Pure. Changes exactly this one characteristic (and anything derived from it). */
@@ -147,6 +152,15 @@ const SOCKET_LABELS: Record<Socket, string> = {
   lga1851: 'Intel LGA1851',
 };
 
+const POWER_CONNECTORS: readonly PowerConnector[] = ['atx-24', 'eps-8', 'pcie-6', 'pcie-8', '12vhpwr'];
+const POWER_CONNECTOR_LABELS: Record<PowerConnector, string> = {
+  '12vhpwr': '12VHPWR',
+  'atx-24': '24-pin ATX',
+  'eps-8': '8-pin EPS',
+  'pcie-6': '6-pin PCIe',
+  'pcie-8': '8-pin PCIe',
+};
+
 /**
  * Steps finer than this are not used, so rounding at this width removes the
  * binary floating-point noise a step like 0.05 would otherwise leave behind
@@ -181,7 +195,11 @@ function isSocket(value: string): value is Socket {
   return (SOCKETS as readonly string[]).includes(value);
 }
 
-function cacheLevelOf(slot: SlotId): CacheLevel | null {
+function isPowerConnector(value: string): value is PowerConnector {
+  return (POWER_CONNECTORS as readonly string[]).includes(value);
+}
+
+function cacheLevelOf(slot: string): CacheLevel | null {
   if (slot === 'l1' || slot === 'l2' || slot === 'l3')
     return slot;
   return null;
@@ -350,6 +368,34 @@ const cpuPart: PartDefinition<CpuPart> = {
         cpu: { ...part.cpu, memoryGenerations: value.filter(isMemoryGeneration) },
       }),
     }),
+    numeric<CpuPart>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.cpu.tdpWatts,
+      group: 'cpu',
+      help: 'Rated power draw. A compatibility rule sums it into the power budget; the simulation ignores it.',
+      id: 'tdpWatts',
+      label: 'TDP',
+      max: 400,
+      min: 1,
+      step: 1,
+      unit: 'watts',
+      with: (part, value) => ({ ...part, cpu: { ...part.cpu, tdpWatts: value } }),
+    }),
+    choice<CpuPart>({
+      control: 'choice',
+      effect: 'validated',
+      get: part => (part.cpu.integratedGraphics ? 'yes' : 'no'),
+      group: 'cpu',
+      help: 'Whether the CPU can drive a display on its own. A compatibility rule reads it when no graphics card is present.',
+      id: 'integratedGraphics',
+      label: 'Integrated graphics',
+      options: [
+        { label: 'Yes', value: 'yes' },
+        { label: 'No', value: 'no' },
+      ],
+      with: (part, value) => ({ ...part, cpu: { ...part.cpu, integratedGraphics: value === 'yes' } }),
+    }),
     ...CACHE_LEVELS.flatMap(level => cacheParameters(level)),
   ],
   read: build => build.cpu,
@@ -489,6 +535,9 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
     id: 'mb-blank',
     maxChannels: 4,
     maxMtPerSecond: 6400,
+    pcieLanes: 20,
+    pcieVersion: 4,
+    powerConnectors: ['atx-24', 'eps-8'],
     socket: 'lga1700',
   },
   id: 'motherboard',
@@ -564,6 +613,45 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
         allowedGenerations: value.filter(isMemoryGeneration),
       }),
     }),
+    numeric<MotherboardSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.pcieVersion,
+      group: 'motherboard',
+      help: 'The PCIe generation of the graphics slot. A compatibility rule reads it against the card.',
+      id: 'pcieVersion',
+      label: 'PCIe version',
+      max: 5,
+      min: 3,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, pcieVersion: value as PcieVersion }),
+    }),
+    numeric<MotherboardSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.pcieLanes,
+      group: 'motherboard',
+      help: 'The lanes the graphics slot provides. A compatibility rule reads it against the card.',
+      id: 'pcieLanes',
+      label: 'PCIe lanes',
+      max: 32,
+      min: 1,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, pcieLanes: value }),
+    }),
+    flags<MotherboardSpec>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.powerConnectors,
+      group: 'motherboard',
+      help: 'The power leads the board needs from the supply. A compatibility rule checks the supply provides them.',
+      id: 'powerConnectors',
+      label: 'Power connectors',
+      options: POWER_CONNECTORS.map(connector => ({ label: POWER_CONNECTOR_LABELS[connector], value: connector })),
+      with: (part, value) => ({ ...part, powerConnectors: value.filter(isPowerConnector) }),
+    }),
   ],
   read: build => build.motherboard,
   slots: ['motherboard'],
@@ -579,10 +667,139 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
  * `PartDefinition<unknown>`. Nothing downstream depends on the erasure being
  * sound: `applyParameter` only ever drives a part through its own descriptors.
  */
+const gpuPart: PartDefinition<GpuSpec> = {
+  blank: {
+    boardPowerWatts: 200,
+    id: 'gpu-blank',
+    identity: 'Custom graphics card',
+    lengthMm: 280,
+    pcieLanes: 16,
+    pcieVersion: 4,
+    powerConnectors: ['pcie-8'],
+  },
+  id: 'gpu',
+  label: 'Graphics card',
+  parameters: [
+    numeric<GpuSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.pcieVersion,
+      group: 'gpu',
+      help: 'The PCIe generation the card expects. A compatibility rule reads it against the board; PCIe is backward compatible, so a mismatch only costs bandwidth.',
+      id: 'pcieVersion',
+      label: 'PCIe version',
+      max: 5,
+      min: 3,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, pcieVersion: value as PcieVersion }),
+    }),
+    numeric<GpuSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.pcieLanes,
+      group: 'gpu',
+      help: 'The lanes the card wants. A compatibility rule reads it against the board budget.',
+      id: 'pcieLanes',
+      label: 'PCIe lanes',
+      max: 32,
+      min: 1,
+      step: 1,
+      unit: 'count',
+      with: (part, value) => ({ ...part, pcieLanes: value }),
+    }),
+    numeric<GpuSpec>({
+      control: 'range',
+      effect: 'validated',
+      get: part => part.lengthMm,
+      group: 'gpu',
+      help: 'The card length. A future rule checks it against the case; nothing simulates it.',
+      id: 'lengthMm',
+      label: 'Length',
+      max: 400,
+      min: 100,
+      step: 5,
+      unit: 'mm',
+      with: (part, value) => ({ ...part, lengthMm: value }),
+    }),
+    numeric<GpuSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.boardPowerWatts,
+      group: 'gpu',
+      help: 'The card power draw. A compatibility rule sums it into the power budget.',
+      id: 'boardPowerWatts',
+      label: 'Board power',
+      max: 800,
+      min: 5,
+      step: 5,
+      unit: 'watts',
+      with: (part, value) => ({ ...part, boardPowerWatts: value }),
+    }),
+    flags<GpuSpec>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.powerConnectors,
+      group: 'gpu',
+      help: 'The power leads the card needs. A compatibility rule checks the supply provides them.',
+      id: 'powerConnectors',
+      label: 'Power connectors',
+      options: POWER_CONNECTORS.map(connector => ({ label: POWER_CONNECTOR_LABELS[connector], value: connector })),
+      with: (part, value) => ({ ...part, powerConnectors: value.filter(isPowerConnector) }),
+    }),
+  ],
+  read: build => build.gpu,
+  slots: [],
+  write: (build, part) => ({ ...build, gpu: part }),
+};
+
+const psuPart: PartDefinition<PsuSpec> = {
+  blank: {
+    connectors: ['atx-24', 'eps-8', 'pcie-8'],
+    id: 'psu-blank',
+    identity: 'Custom power supply',
+    wattage: 650,
+  },
+  id: 'psu',
+  label: 'Power supply',
+  parameters: [
+    numeric<PsuSpec>({
+      control: 'count',
+      effect: 'validated',
+      get: part => part.wattage,
+      group: 'psu',
+      help: 'The supply\'s rated output. A compatibility rule checks it covers the parts\' draw.',
+      id: 'wattage',
+      label: 'Wattage',
+      max: 2000,
+      min: 100,
+      step: 50,
+      unit: 'watts',
+      with: (part, value) => ({ ...part, wattage: value }),
+    }),
+    flags<PsuSpec>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.connectors,
+      group: 'psu',
+      help: 'The power leads the supply provides. Compatibility rules check the board and card against them.',
+      id: 'connectors',
+      label: 'Connectors',
+      options: POWER_CONNECTORS.map(connector => ({ label: POWER_CONNECTOR_LABELS[connector], value: connector })),
+      with: (part, value) => ({ ...part, connectors: value.filter(isPowerConnector) }),
+    }),
+  ],
+  read: build => build.psu,
+  slots: [],
+  write: (build, part) => ({ ...build, psu: part }),
+};
+
 const PARTS: readonly PartDefinition<unknown>[] = [
   cpuPart,
   memoryPart,
   motherboardPart,
+  gpuPart,
+  psuPart,
 ] as unknown as readonly PartDefinition<unknown>[];
 
 export function partDefinitions(): readonly PartDefinition<unknown>[] {

@@ -22,6 +22,8 @@ export type {
   MemorySpec,
   MotherboardSpec,
   OutstandingStats,
+  PcieVersion,
+  PowerConnector,
   ResourceRole,
   ResourceStats,
   SimResult,
