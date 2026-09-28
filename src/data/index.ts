@@ -1,4 +1,4 @@
-export { addPart, completeBuild, emptyBuild, hasPart, missingParts, toConfigParts } from './build';
+export { addPart, completeBuild, emptyBuild, hasPart, missingParts, removePart, toConfigParts } from './build';
 export type { Build } from './build';
 export { buildChecks } from './checks';
 export type { Check } from './checks';

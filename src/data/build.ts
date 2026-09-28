@@ -79,3 +79,20 @@ export function addPart(build: Build, part: PartId): Build {
     return build;
   return definition.write(build, definition.blank);
 }
+
+/** Removes a part, returning the slot to absent. */
+export function removePart(build: Build, part: PartId): Build {
+  switch (part) {
+    case 'cpu':
+      return { ...build, cpu: null };
+    case 'memory':
+      return { ...build, memory: null };
+    case 'motherboard':
+      return { ...build, motherboard: null };
+    default: {
+      // Forces this switch to be revisited when a new part kind is added.
+      const unreachable: never = part;
+      return unreachable;
+    }
+  }
+}

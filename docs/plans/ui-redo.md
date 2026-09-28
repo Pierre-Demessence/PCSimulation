@@ -95,7 +95,7 @@ through the data layer (`addPart`, `applyParameter`, `buildSheet`, `simulate`).
 | Wave | Deliverable | Status |
 | --- | --- | --- |
 | U1 | Toolchain: React + Tailwind + shadcn scaffold; the app shell renders; old UI deleted | shipped |
-| U2 | The build list: add a part, edit its whole spec at once, remove it | not started |
+| U2 | The build list: add a part, edit its whole spec at once, remove it | shipped |
 | U3 | The analysis: verdict + Compatibility / Performance / Parts tabs, from the sheet model | not started |
 | U4 | Visualisation tab: the 3D model and flat board wrapped as a component, with the playback controls | not started |
 | U5 | Aesthetic + accessibility pass, colourblind verification, component tests | not started |
@@ -118,13 +118,19 @@ visualisation tab wires it back in (U4).
 
 ### U2 — The build list
 
-- [ ] A `<BuildList>` of part-slot rows, driven by `partDefinitions()` and the
-      `Build` state; **Add** calls `addPart`, and a populated row shows the part
-      with a status glyph.
-- [ ] A `<PartEditor>` that renders **every** descriptor of a part at once as a
-      form (shadcn `Field`/`Input`/`Select`/`ToggleGroup`), each writing through
+Shipped. `BuildPanel` maps `partDefinitions()` to a `PartSlot` each: absent slots
+show an Add control, present ones a Card with the whole spec and a Remove button.
+`PartEditor` groups a part's descriptors by slot and renders them all at once;
+each control writes through `applyParameter`, and a refusal keeps the value and
+names the invariant. A `removePart` was added to the data layer (with a `never`
+exhaustiveness guard). Component tests cover add/edit/remove and a refusal.
+
+- [x] A build panel of part-slot rows, driven by `partDefinitions()` and the
+      `Build` state; **Add** calls `addPart`, and a populated slot is a Card.
+- [x] A `<PartEditor>` that renders **every** descriptor of a part at once
+      (number Input, shadcn Select, shadcn Checkbox), each writing through
       `applyParameter`; a refusal keeps the value and shows the reason.
-- [ ] Remove-a-part control; the empty state names what to add.
+- [x] Remove-a-part control (`removePart`); an absent slot names the part to add.
 
 ### U3 — The analysis
 
