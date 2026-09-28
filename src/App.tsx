@@ -54,8 +54,11 @@ export function App() {
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-baseline gap-3">
           <h1 className="text-base font-semibold tracking-tight">PC Build Analyzer</h1>
-          <span className="font-mono text-xs text-muted-foreground">v0.2</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            Assemble a build; see what fits and what limits it.
+          </span>
         </div>
+        <span className="font-mono text-xs text-muted-foreground">v0.2</span>
       </header>
       <main className="grid min-h-0 flex-1 gap-px bg-border md:grid-cols-[minmax(24rem,2fr)_3fr]">
         <section aria-label="Build" className="overflow-auto bg-background p-6">

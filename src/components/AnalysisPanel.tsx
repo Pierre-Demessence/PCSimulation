@@ -26,6 +26,13 @@ const TONE_CLASS: Record<Summary['tone'], string> = {
   warn: 'text-amber-500',
 };
 
+const BORDER_TONE: Record<Summary['tone'], string> = {
+  bad: 'border-l-destructive',
+  good: 'border-l-emerald-500',
+  muted: 'border-l-border',
+  warn: 'border-l-amber-500',
+};
+
 function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
@@ -126,7 +133,7 @@ export function AnalysisPanel({
         </ToggleGroup>
       </div>
 
-      <div className="rounded-lg border p-4">
+      <div className={`rounded-lg border border-l-4 p-4 ${BORDER_TONE[summary.tone]}`}>
         <div className="flex items-center gap-2">
           <span className={`font-mono text-base ${TONE_CLASS[summary.tone]}`} aria-hidden>{summary.glyph}</span>
           <span className={`text-sm font-medium ${TONE_CLASS[summary.tone]}`}>{summary.word}</span>

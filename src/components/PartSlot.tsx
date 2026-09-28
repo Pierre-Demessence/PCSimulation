@@ -18,6 +18,7 @@ import { partSummary } from './partInfo';
 
 const STATUS_GLYPH: Record<PartStatus, string> = { bad: '✘', warn: '⚠' };
 const STATUS_TONE: Record<PartStatus, string> = { bad: 'text-destructive', warn: 'text-amber-500' };
+const STATUS_WORD: Record<PartStatus, string> = { bad: 'Incompatible', warn: 'Warning' };
 
 export function PartSlot({
   definition,
@@ -45,14 +46,16 @@ export function PartSlot({
 
   const glyph = status === undefined ? '✓' : STATUS_GLYPH[status];
   const tone = status === undefined ? 'text-muted-foreground' : STATUS_TONE[status];
+  const word = status === undefined ? 'Compatible' : STATUS_WORD[status];
 
   return (
     <div className="flex items-center gap-3 rounded-lg border px-4 py-3">
       <span className={`font-mono text-sm ${tone}`} aria-hidden>{glyph}</span>
+      <span className="sr-only">{word}</span>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium">{definition.label}</div>
         <div className="truncate font-mono text-xs text-muted-foreground">
-          {partSummary(definition.parameters, partValue)}
+          {partSummary(definition, partValue)}
         </div>
       </div>
       <Dialog>

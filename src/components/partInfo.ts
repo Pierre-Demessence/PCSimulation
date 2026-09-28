@@ -1,4 +1,4 @@
-import type { Check, Parameter, PartId } from '@/data';
+import type { Check, Parameter, PartDefinition, PartId } from '@/data';
 
 import { formatUnit } from '@/render/format';
 
@@ -20,12 +20,22 @@ function renderValue(parameter: Parameter<unknown>, part: unknown): string {
   }
 }
 
-/** A short headline for a collapsed part row: its first few characteristics. */
-export function partSummary(parameters: readonly Parameter<unknown>[], part: unknown, count = 3): string {
-  return parameters
-    .slice(0, count)
-    .map(parameter => renderValue(parameter, part))
-    .join(' · ');
+/** The identifying characteristics shown on a collapsed row, per part kind. */
+const SUMMARY_FIELDS: Partial<Record<PartId, readonly string[]>> = {
+  cpu: ['socket', 'clockHz'],
+  memory: ['generation', 'mtPerSecond', 'casLatency'],
+  motherboard: ['socket', 'allowedGenerations', 'dimmSlots'],
+};
+
+/** A short headline for a collapsed part row. */
+export function partSummary(definition: PartDefinition<unknown>, part: unknown): string {
+  const ids = SUMMARY_FIELDS[definition.id];
+  const chosen = ids === undefined
+    ? definition.parameters.slice(0, 2)
+    : ids
+        .map(id => definition.parameters.find(parameter => parameter.id === id))
+        .filter((parameter): parameter is Parameter<unknown> => parameter !== undefined);
+  return chosen.map(parameter => renderValue(parameter, part)).join(' · ');
 }
 
 function partOfSource(source: string): PartId | null {
