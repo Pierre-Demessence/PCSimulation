@@ -2,7 +2,7 @@ import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
 
-import { memorySpec } from '@/data';
+import { BASELINE_CPU, memorySpec } from '@/data';
 import { GENERATION_PAIRS, testConfig } from '@/testing/build';
 
 import { validateConfiguration } from './compat';
@@ -41,6 +41,7 @@ describe('validateConfiguration', () => {
       id: 'mb-narrow',
       maxChannels: 4,
       maxMtPerSecond: 3200,
+      socket: 'lga1700',
     };
     const problems = validateConfiguration({
       ...testConfig(),
@@ -63,5 +64,19 @@ describe('validateConfiguration', () => {
       caches: { ...base.caches, l2: { ...base.caches.l2, maxOutstandingMisses: 0 } },
     });
     expect(problems).toContain('L2 needs at least one outstanding-miss slot');
+  });
+
+  it('rejects a CPU whose socket does not fit the board', () => {
+    const problems = validateConfiguration(
+      testConfig({ cpu: { ...BASELINE_CPU, socket: 'am5' } }),
+    );
+    expect(problems.some(problem => problem.includes('socket'))).toBe(true);
+  });
+
+  it('rejects memory the CPU controller does not support', () => {
+    const problems = validateConfiguration(
+      testConfig({ cpu: { ...BASELINE_CPU, memoryGenerations: ['ddr5'] } }),
+    );
+    expect(problems).toContain('the CPU\'s memory controller does not support DDR4');
   });
 });

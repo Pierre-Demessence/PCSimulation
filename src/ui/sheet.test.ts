@@ -31,6 +31,7 @@ function sampleSheet(): BuildSheet {
         id: 'generation',
         met: true,
         rule: 'the board accepts the DIMM generation',
+        severity: 'incompatible',
         sources: ['memory.generation'],
         statement: 'DDR4 memory accepted by this board',
       },
@@ -38,6 +39,7 @@ function sampleSheet(): BuildSheet {
         id: 'speed',
         met: false,
         rule: 'the DIMM speed stays within the board\'s cap',
+        severity: 'warning',
         sources: ['memory.mtPerSecond', 'motherboard.maxMtPerSecond'],
         statement: '5600 MT/s against a board cap of 3200 MT/s',
       },
@@ -177,7 +179,7 @@ describe('build sheet', () => {
     expect(checks).toHaveLength(2);
     expect(text(checks[0])).toContain('met');
     expect(text(checks[0])).not.toContain('not met');
-    expect(text(checks[1])).toContain('not met');
+    expect(text(checks[1])).toContain('out of spec');
   });
 
   it('rebuilds the document instead of accumulating rows', () => {

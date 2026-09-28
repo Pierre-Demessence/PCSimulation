@@ -37,8 +37,10 @@ export const BASELINE_CPU: CpuSpec = {
   clockHz: CLOCK_HZ,
   cores: 1,
   id: 'cpu',
+  memoryGenerations: ['ddr3', 'ddr4', 'ddr5'],
   role: 'work',
   serviceTimeNs: CYCLES_PER_ISSUE / (CLOCK_HZ / 1e9),
+  socket: 'lga1700',
 };
 
 export const CACHE_HIERARCHY: CacheHierarchy = {

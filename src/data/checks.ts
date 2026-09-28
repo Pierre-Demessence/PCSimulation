@@ -1,5 +1,6 @@
-import type { HardwareConfig } from '@/sim';
+import type { RuleSeverity } from './compat';
 
+import type { HardwareConfig } from '@/sim';
 import { CONFIGURATION_RULES } from './compat';
 
 /** A rule that can be met or broken, stated so the reader can check it. */
@@ -10,6 +11,8 @@ export interface Check {
   readonly rule: string;
   readonly sources: readonly string[];
   readonly met: boolean;
+  /** `incompatible` (parts cannot work together) or `warning` (works, below spec). */
+  readonly severity: RuleSeverity;
 }
 
 /**
@@ -38,6 +41,7 @@ export function buildChecks(parts: Partial<HardwareConfig>): readonly Check[] {
       id: rule.id,
       met: outcome.violation === null,
       rule: outcome.rule,
+      severity: rule.severity,
       sources: rule.sources,
       statement: outcome.statement,
     });

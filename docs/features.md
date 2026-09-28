@@ -14,9 +14,14 @@ Product-level feature list. One line per feature: name — description — owner
 - **Bottleneck classification** — reports per-resource utilisation, then labels
   the run resource-bound (naming the saturated part) or latency-bound (naming
   the dependency chain). — owner: Pierre
-- **Motherboard compatibility** — checks a DIMM against the board and explains
-  which rule it broke. A part outside the board's spec is still simulated: the
-  comparison is the lesson, so nothing is blocked. — owner: Pierre
+- **Compatibility checks** — part-against-part rules stated as met or broken and
+  sourced to the fields they read: the CPU socket against the board, the CPU's
+  memory-controller support and the board's acceptance against the DIMM's
+  generation, and the board's channel and speed caps. Each carries a severity —
+  `not compatible` for parts that cannot work together, `out of spec` for a part
+  that works below spec — as a word beside a ✓/✘ glyph, never colour alone. A
+  part outside spec is still simulated: the comparison is the lesson, so nothing
+  is blocked. — owner: Pierre
 - **Results readout** — cards for time to finish, achieved bandwidth, mean
   latency, the DIMM's peak and CAS latency, L1 hit rate and the limiter, each
   with a tooltip stating what it means and its unit. The build sheet restates the

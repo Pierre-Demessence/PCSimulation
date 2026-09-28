@@ -56,11 +56,19 @@ function limitRow(limit: RenderedLimit): HTMLElement {
   return row;
 }
 
+/** The state word carries the meaning, so it never rests on colour alone. */
+function checkState(check: Check): string {
+  if (check.met)
+    return 'met';
+  return check.severity === 'incompatible' ? 'not compatible' : 'out of spec';
+}
+
 function checkRow(check: Check): HTMLElement {
-  const row = element('div', `sheet-check ${check.met ? 'check-met' : 'check-not-met'}`);
+  const stateClass = check.met ? 'check-met' : `check-not-met check-${check.severity}`;
+  const row = element('div', `sheet-check ${stateClass}`);
   row.append(
     element('span', 'check-glyph', check.met ? '✓' : '✘'),
-    element('span', 'check-state', check.met ? 'met' : 'not met'),
+    element('span', 'check-state', checkState(check)),
     element('span', 'check-statement', check.statement),
     element('span', 'check-rule', check.rule),
   );

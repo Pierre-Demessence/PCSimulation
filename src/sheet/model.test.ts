@@ -76,14 +76,18 @@ describe('buildSheet', () => {
     expect(DDR4_RUN.sheet.parts.map(section => section.part))
       .toEqual(['cpu', 'memory', 'motherboard']);
 
-    const ids = DDR4_RUN.sheet.parts.flatMap(section => section.rows.map(row => row.id));
-    expect(new Set(ids).size).toBe(ids.length);
-
     const generation = DDR4_RUN.sheet.parts
       .find(section => section.part === 'memory')
       ?.rows
       .find(row => row.id === 'generation');
     expect(generation?.value).toBe('DDR4');
+  });
+
+  it('keeps row ids unique within each part', () => {
+    for (const section of DDR4_RUN.sheet.parts) {
+      const ids = section.rows.map(row => row.id);
+      expect(new Set(ids).size, section.part).toBe(ids.length);
+    }
   });
 
   it('writes one row per present descriptor', () => {

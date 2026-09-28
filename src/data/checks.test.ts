@@ -19,6 +19,7 @@ const DDR4_BOARD: MotherboardSpec = {
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
+  socket: 'lga1700',
 };
 
 const DDR4_3200: MemorySpec = {
@@ -127,6 +128,20 @@ describe('buildChecks', () => {
     expect(buildChecks({})).toEqual([]);
     expect(buildChecks({ memory: DDR4_3200 })).toEqual([]);
     expect(buildChecks({ motherboard: DDR4_BOARD })).toEqual([]);
+  });
+
+  it('adds the CPU checks with their severity when a CPU is present', () => {
+    const checks = buildChecks({ cpu: BASELINE_CPU, memory: DDR4_3200, motherboard: DDR4_BOARD });
+
+    const socket = checks.find(check => check.id === 'cpu-socket-matches-board');
+    expect(socket?.severity).toBe('incompatible');
+    expect(socket?.met).toBe(true);
+
+    const generation = checks.find(check => check.id === 'cpu-accepts-generation');
+    expect(generation?.met).toBe(true);
+
+    const speed = checks.find(check => check.id === 'speed-within-board-cap');
+    expect(speed?.severity).toBe('warning');
   });
 
   it('gives the positivity guards no row even when they fire', () => {

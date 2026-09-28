@@ -7,6 +7,7 @@ import type {
   MemoryGeneration,
   MemorySpec,
   MotherboardSpec,
+  Socket,
 } from '@/sim';
 
 import { DEFAULT_LINE_BYTES } from '@/sim';
@@ -137,6 +138,15 @@ const MAX_SETS = 262_144;
 
 const MEMORY_GENERATIONS: readonly string[] = ['ddr3', 'ddr4', 'ddr5'];
 
+const SOCKETS: readonly Socket[] = ['am4', 'am5', 'lga1200', 'lga1700', 'lga1851'];
+const SOCKET_LABELS: Record<Socket, string> = {
+  am4: 'AMD AM4',
+  am5: 'AMD AM5',
+  lga1200: 'Intel LGA1200',
+  lga1700: 'Intel LGA1700',
+  lga1851: 'Intel LGA1851',
+};
+
 /**
  * Steps finer than this are not used, so rounding at this width removes the
  * binary floating-point noise a step like 0.05 would otherwise leave behind
@@ -165,6 +175,10 @@ function flags<Part, Value extends readonly string[] = readonly string[]>(
 
 function isMemoryGeneration(value: string): value is MemoryGeneration {
   return MEMORY_GENERATIONS.includes(value);
+}
+
+function isSocket(value: string): value is Socket {
+  return (SOCKETS as readonly string[]).includes(value);
 }
 
 function cacheLevelOf(slot: SlotId): CacheLevel | null {
@@ -305,6 +319,37 @@ const cpuPart: PartDefinition<CpuPart> = {
       unit: 'count',
       with: (part, value) => ({ ...part, cpu: { ...part.cpu, cores: value } }),
     }),
+    choice<CpuPart>({
+      control: 'choice',
+      effect: 'validated',
+      get: part => part.cpu.socket,
+      group: 'cpu',
+      help: 'The CPU socket. A compatibility rule checks it against the motherboard; the simulation ignores it.',
+      id: 'socket',
+      label: 'Socket',
+      options: SOCKETS.map(socket => ({ label: SOCKET_LABELS[socket], value: socket })),
+      with: (part, value) => ({
+        ...part,
+        cpu: { ...part.cpu, socket: isSocket(value) ? value : part.cpu.socket },
+      }),
+    }),
+    flags<CpuPart>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.cpu.memoryGenerations,
+      group: 'cpu',
+      help: 'Which memory generations the CPU controller accepts. A compatibility rule checks the DIMM against it; the simulation ignores it.',
+      id: 'memoryGenerations',
+      label: 'Memory support',
+      options: MEMORY_GENERATIONS.map(generation => ({
+        label: generation.toUpperCase(),
+        value: generation,
+      })),
+      with: (part, value) => ({
+        ...part,
+        cpu: { ...part.cpu, memoryGenerations: value.filter(isMemoryGeneration) },
+      }),
+    }),
     ...CACHE_LEVELS.flatMap(level => cacheParameters(level)),
   ],
   read: build => build.cpu,
@@ -444,10 +489,22 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
     id: 'mb-blank',
     maxChannels: 4,
     maxMtPerSecond: 6400,
+    socket: 'lga1700',
   },
   id: 'motherboard',
   label: 'Motherboard',
   parameters: [
+    choice<MotherboardSpec>({
+      control: 'choice',
+      effect: 'validated',
+      get: part => part.socket,
+      group: 'motherboard',
+      help: 'The board socket. A compatibility rule checks it against the CPU; the simulation ignores it.',
+      id: 'socket',
+      label: 'Socket',
+      options: SOCKETS.map(socket => ({ label: SOCKET_LABELS[socket], value: socket })),
+      with: (part, value) => ({ ...part, socket: isSocket(value) ? value : part.socket }),
+    }),
     numeric<MotherboardSpec>({
       control: 'count',
       effect: 'validated',

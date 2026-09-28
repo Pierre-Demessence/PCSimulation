@@ -25,8 +25,12 @@ export interface RuleOutcome {
  * which is what keeps the warnings line and the sheet from stating one rule two
  * ways.
  */
+/** How a broken rule is presented: parts that cannot work together (`incompatible`), or that work below spec (`warning`). */
+export type RuleSeverity = 'incompatible' | 'warning';
+
 export interface ConfigurationRule {
   readonly id: string;
+  readonly severity: RuleSeverity;
   readonly sources: readonly string[];
   evaluate: (parts: Parts) => RuleOutcome | null;
 }
@@ -35,6 +39,7 @@ export interface ConfigurationRule {
 function boardRule(
   id: string,
   sources: readonly string[],
+  severity: RuleSeverity,
   evaluate: (memory: MemorySpec, motherboard: MotherboardSpec) => RuleOutcome,
 ): ConfigurationRule {
   return {
@@ -45,6 +50,7 @@ function boardRule(
       return evaluate(memory, motherboard);
     },
     id,
+    severity,
     sources,
   };
 }
@@ -69,6 +75,7 @@ function atLeastOne(
       return { rule: wording, violation: value < 1 ? wording : null };
     },
     id,
+    severity: 'warning',
     sources: [source],
   };
 }
@@ -80,9 +87,43 @@ function atLeastOne(
  * how many presentations read it.
  */
 export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
+  {
+    evaluate(parts) {
+      const { cpu, motherboard } = parts;
+      if (cpu === undefined || motherboard === undefined)
+        return null;
+      const rule = `CPU socket ${cpu.socket.toUpperCase()} does not fit the board's ${motherboard.socket.toUpperCase()} socket`;
+      return {
+        rule,
+        statement: `CPU socket ${cpu.socket.toUpperCase()} fits the board`,
+        violation: cpu.socket === motherboard.socket ? null : rule,
+      };
+    },
+    id: 'cpu-socket-matches-board',
+    severity: 'incompatible',
+    sources: ['cpu.socket', 'motherboard.socket'],
+  },
+  {
+    evaluate(parts) {
+      const { cpu, memory } = parts;
+      if (cpu === undefined || memory === undefined)
+        return null;
+      const generation = memory.generation.toUpperCase();
+      const rule = `the CPU's memory controller does not support ${generation}`;
+      return {
+        rule,
+        statement: `${generation} memory supported by the CPU`,
+        violation: cpu.memoryGenerations.includes(memory.generation) ? null : rule,
+      };
+    },
+    id: 'cpu-accepts-generation',
+    severity: 'incompatible',
+    sources: ['cpu.memoryGenerations', 'memory.generation'],
+  },
   boardRule(
     'memory-generation-accepted',
     ['memory.generation', 'motherboard.allowedGenerations'],
+    'incompatible',
     (memory, motherboard) => {
       const generation = memory.generation.toUpperCase();
       const rule = `board does not accept ${generation} memory`;
@@ -102,6 +143,7 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
   boardRule(
     'channels-within-board-cap',
     ['memory.channels', 'motherboard.maxChannels'],
+    'warning',
     (memory, motherboard) => {
       const rule = `board supports at most ${motherboard.maxChannels} channel(s)`;
       return {
@@ -114,6 +156,7 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
   boardRule(
     'channels-within-dimm-slots',
     ['memory.channels', 'motherboard.dimmSlots'],
+    'warning',
     (memory, motherboard) => {
       const rule = `each channel needs a DIMM, and the board has ${motherboard.dimmSlots} slot(s)`;
       return {
@@ -132,6 +175,7 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
   boardRule(
     'speed-within-board-cap',
     ['memory.mtPerSecond', 'motherboard.maxMtPerSecond'],
+    'warning',
     (memory, motherboard) => {
       const rule = `board caps memory at ${motherboard.maxMtPerSecond} MT/s`;
       return {

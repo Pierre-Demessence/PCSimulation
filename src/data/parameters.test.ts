@@ -45,8 +45,12 @@ function legalValues(parameter: Parameter<unknown>): readonly ParameterValue[] {
       return [parameter.min, parameter.max];
     case 'choice':
       return parameter.options.map(option => option.value);
-    case 'flags':
-      return [parameter.options.map(option => option.value)];
+    case 'flags': {
+      const all = parameter.options.map(option => option.value);
+      // Two distinct sets, so a descriptor whose default is the full set still
+      // offers an alternative to the "changes exactly one" test.
+      return all.length > 1 ? [all, all.slice(1)] : [all];
+    }
   }
 }
 

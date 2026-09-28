@@ -6,6 +6,9 @@ export type ResourceRole = 'budget' | 'delay' | 'pipe' | 'tank' | 'work';
 
 export type MemoryGeneration = 'ddr3' | 'ddr4' | 'ddr5';
 
+/** CPU and motherboard socket. Compatibility-only: the simulation never reads it. */
+export type Socket = 'am4' | 'am5' | 'lga1200' | 'lga1700' | 'lga1851';
+
 /** Levels that participate in the access path, plus the issuing core. */
 export type LevelId = 'l1' | 'l2' | 'l3' | 'memory' | 'cpu';
 
@@ -41,6 +44,10 @@ export interface MemorySpec {
 export interface CpuSpec {
   readonly id: string;
   readonly role: 'work';
+  /** Compatibility-only: checked against the motherboard, ignored by the core. */
+  readonly socket: Socket;
+  /** Compatibility-only: the generations the controller accepts. */
+  readonly memoryGenerations: readonly MemoryGeneration[];
   readonly clockHz: number;
   readonly cores: number;
   readonly serviceTimeNs: number;
@@ -48,6 +55,8 @@ export interface CpuSpec {
 
 export interface MotherboardSpec {
   readonly id: string;
+  /** Compatibility-only: checked against the CPU, ignored by the core. */
+  readonly socket: Socket;
   readonly allowedGenerations: readonly MemoryGeneration[];
   readonly dimmSlots: number;
   readonly maxChannels: number;

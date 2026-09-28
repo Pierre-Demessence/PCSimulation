@@ -197,7 +197,7 @@ export interface CompatRule {
 | Wave | Deliverable | Status |
 | --- | --- | --- |
 | B1 | Spine flip: `Build` decouples from `HardwareConfig`; `completeBuild` becomes a projection; the sim keeps its input | shipped |
-| B2 | Compatibility vocabulary + engine: sockets, chipsets, form factors, connectors, severity; CPU↔board socket the first new check | not started |
+| B2 | Compatibility vocabulary + engine: sockets, chipsets, form factors, connectors, severity; CPU↔board socket the first new check | shipped |
 | B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | not started |
 | B4 | Storage + cooler: interface + ports, socket support, TDP headroom | not started |
 | B5 | Case + physical fit: form factor, GPU length, cooler height, radiator support | not started |
@@ -239,24 +239,36 @@ still produces the v0.1 numbers.
 
 ### B2 — Compatibility vocabulary and engine
 
-- [ ] Add `src/data/parts/vocabulary.ts` with `Socket`, `FormFactor`,
-      `PcieVersion`, `PowerConnector`.
-- [ ] Give `CpuSpec` and `MotherboardSpec` their `socket` (+ form factor, lanes,
-      connectors), marked `validated` in the registry — read by a rule, ignored
-      by the sim. `chipset` stays `display-only`: no rule reads it until a
-      support matrix is sourced (see the deferred note in the matrix).
-- [ ] Generalise `ConfigurationRule` → `CompatRule` with `severity`
-      (`src/data/compat.ts@22-31`); `validateConfiguration` and `buildChecks`
-      keep walking the one list.
-- [ ] Add the first new check: **CPU socket must match the motherboard socket** —
-      the flagship PCPartPicker rule, impossible to express before this wave.
-- [ ] Add the CPU↔board memory-generation check (the CPU controller's supported
-      generations against the DIMM), distinct from the existing board rule.
-- [ ] The sheet's `CHECKS` block groups by `severity`; a broken `incompatible`
-      rule carries the word `not compatible`, never colour alone (Pierre is
-      colour-blind — see repo memory).
-- [ ] Tests: a mismatched socket is `incompatible` and explained; the run still
-      happens when the memory path is present; a matched socket is `met`.
+Shipped. Two as-shipped choices worth recording: the `Socket` type lives in
+`src/sim/types.ts` beside `MemoryGeneration` (the sim specs cannot import a
+data-layer file, and this is where the specs they annotate live), with its option
+list and labels in `src/data/parameters.ts` beside `MEMORY_GENERATIONS`. And only
+the fields a B2 rule reads are added — `socket` on both, `memoryGenerations` on
+the CPU — with form factor, lanes and connectors deferred to the waves whose
+rules read them, so no orphan field ships.
+
+- [x] Add the compatibility vocabulary: `Socket` in `src/sim/types.ts` (the
+      other value types arrive with their rules). Its option list and labels
+      (`SOCKETS`, `SOCKET_LABELS`, `isSocket`) live in `src/data/parameters.ts`.
+- [x] Give `CpuSpec` its `socket` + `memoryGenerations` and `MotherboardSpec` its
+      `socket`, marked `validated` in the registry — read by a rule, ignored by
+      the sim. `chipset` is not added yet: no rule reads it until a support matrix
+      is sourced (see the deferred note in the matrix).
+- [x] Add `severity` (`'incompatible' | 'warning'`) to `ConfigurationRule` (kept
+      that name rather than renaming to `CompatRule` — same shape, less churn);
+      `validateConfiguration` and `buildChecks` keep walking the one list and
+      `buildChecks` carries the severity onto each `Check`.
+- [x] Add the flagship check: **CPU socket must match the motherboard socket** —
+      impossible to express before this wave.
+- [x] Add the CPU↔memory generation check (`cpu-accepts-generation`): the CPU
+      controller's supported generations against the DIMM, distinct from the
+      board's `memory-generation-accepted` rule.
+- [x] The sheet's `CHECKS` rows carry a severity **word** — `met`,
+      `not compatible` (incompatible) or `out of spec` (warning) — beside the
+      ✓/✘ glyph, so the outcome never rests on colour alone.
+- [x] Tests: a mismatched socket and an unsupported generation are each
+      `incompatible` and explained; a matched build stays `met`; the CPU checks
+      render only when a CPU is present.
 
 ### B3 — GPU and PSU as real parts
 
@@ -491,7 +503,7 @@ guesses. `chipset` stays `display-only` until then.
 | Rule id | Reads | Severity | Wave |
 | --- | --- | --- | --- |
 | `board-accepts-generation` ✓ *(exists)* | `memory.generation`, `motherboard.allowedGenerations` | incompatible | shipped → B2 |
-| `cpu-controller-accepts-generation` | `memory.generation`, `cpu.memoryGenerations` | incompatible | B2 |
+| `cpu-accepts-generation` | `memory.generation`, `cpu.memoryGenerations` | incompatible | B2 |
 | `modules-within-dimm-slots` | `memory.moduleCount`, `motherboard.dimmSlots` | incompatible | B2 |
 | `channels-within-board-cap` ✓ *(exists)* | `memory.channels`, `motherboard.maxChannels` | warning | shipped |
 | `channels-within-dimm-slots` ✓ *(exists)* | `memory.channels`, `motherboard.dimmSlots` | warning | shipped |

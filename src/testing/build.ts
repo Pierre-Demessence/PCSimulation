@@ -25,6 +25,7 @@ export const DDR3_BOARD: MotherboardSpec = {
   id: 'mb-ddr3',
   maxChannels: 2,
   maxMtPerSecond: 1600,
+  socket: 'lga1700',
 };
 
 export const DDR4_BOARD: MotherboardSpec = {
@@ -33,6 +34,7 @@ export const DDR4_BOARD: MotherboardSpec = {
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
+  socket: 'lga1700',
 };
 
 export const DDR5_BOARD: MotherboardSpec = {
@@ -41,6 +43,7 @@ export const DDR5_BOARD: MotherboardSpec = {
   id: 'mb-ddr5',
   maxChannels: 4,
   maxMtPerSecond: 6000,
+  socket: 'lga1700',
 };
 
 /** The three generation-matched pairs the memory comparisons are made of. */

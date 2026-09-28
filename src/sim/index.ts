@@ -26,4 +26,5 @@ export type {
   ResourceStats,
   SimResult,
   SimSpan,
+  Socket,
 } from './types';

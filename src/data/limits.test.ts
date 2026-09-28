@@ -13,6 +13,7 @@ const DDR4_BOARD: MotherboardSpec = {
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
+  socket: 'lga1700',
 };
 
 const DDR5_BOARD: MotherboardSpec = {
@@ -21,6 +22,7 @@ const DDR5_BOARD: MotherboardSpec = {
   id: 'mb-ddr5',
   maxChannels: 4,
   maxMtPerSecond: 6000,
+  socket: 'lga1700',
 };
 
 /** DDR4-3200 CL16 in two channels, the sheet's worked example. */
