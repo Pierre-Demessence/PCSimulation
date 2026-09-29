@@ -1,4 +1,4 @@
-import type { CoolerSpec, GpuSpec, PsuSpec, StorageSpec } from '@/data';
+import type { CaseSpec, CoolerSpec, GpuSpec, PsuSpec, StorageSpec } from '@/data';
 import type { HardwareConfig, MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
@@ -45,6 +45,13 @@ const BASE_STORAGE: StorageSpec = {
   pcieLanes: 4,
 };
 
+const BASE_CASE: CaseSpec = {
+  formFactors: ['atx', 'matx', 'itx'],
+  id: 'case',
+  identity: 'Test case',
+  maxCoolerHeightMm: 170,
+  maxGpuLengthMm: 360,
+};
 describe('validateConfiguration', () => {
   it('accepts every generation on its own board', () => {
     for (const { board, memory } of GENERATION_PAIRS)
@@ -72,6 +79,7 @@ describe('validateConfiguration', () => {
     const board: MotherboardSpec = {
       allowedGenerations: ['ddr4'],
       dimmSlots: 2,
+      formFactor: 'atx',
       id: 'mb-narrow',
       maxChannels: 4,
       maxMtPerSecond: 3200,
@@ -202,5 +210,37 @@ describe('validateConfiguration', () => {
     const withM2 = validateConfiguration({ gpu, motherboard: board, storage: BASE_STORAGE });
     expect(withoutM2.some(problem => problem.includes('PCIe lanes'))).toBe(false);
     expect(withM2.some(problem => problem.includes('PCIe lanes'))).toBe(true);
+  });
+
+  it('rejects a board the case cannot hold', () => {
+    const problems = validateConfiguration({
+      case: { ...BASE_CASE, formFactors: ['itx'] },
+      motherboard: testConfig().motherboard,
+    });
+    expect(problems.some(problem => problem.includes('does not support the ATX board'))).toBe(true);
+  });
+
+  it('rejects a card longer than the case allows', () => {
+    const problems = validateConfiguration({
+      case: { ...BASE_CASE, maxGpuLengthMm: 250 },
+      gpu: BASE_GPU,
+    });
+    expect(problems.some(problem => problem.includes('mm clearance'))).toBe(true);
+  });
+
+  it('rejects a cooler taller than the case allows', () => {
+    const problems = validateConfiguration({
+      case: { ...BASE_CASE, maxCoolerHeightMm: 120 },
+      cooler: BASE_COOLER,
+    });
+    expect(problems.some(problem => problem.includes('mm clearance'))).toBe(true);
+  });
+
+  it('accepts a card exactly as long as the case allows', () => {
+    const problems = validateConfiguration({
+      case: { ...BASE_CASE, maxGpuLengthMm: BASE_GPU.lengthMm },
+      gpu: BASE_GPU,
+    });
+    expect(problems.some(problem => problem.includes('mm clearance'))).toBe(false);
   });
 });

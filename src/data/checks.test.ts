@@ -16,6 +16,7 @@ interface MemoryAndBoard {
 const DDR4_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr4'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,

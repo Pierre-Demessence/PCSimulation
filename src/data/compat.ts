@@ -1,6 +1,6 @@
 import type { CompatParts } from './parts/specs';
 
-import type { MemorySpec, MotherboardSpec, PowerConnector } from '@/sim';
+import type { FormFactor, MemorySpec, MotherboardSpec, PowerConnector } from '@/sim';
 
 type Parts = CompatParts;
 
@@ -13,6 +13,13 @@ const CONNECTOR_LABEL: Record<PowerConnector, string> = {
   'eps-8': '8-pin EPS',
   'pcie-6': '6-pin PCIe',
   'pcie-8': '8-pin PCIe',
+};
+
+const FORM_FACTOR_LABEL: Record<FormFactor, string> = {
+  atx: 'ATX',
+  eatx: 'E-ATX',
+  itx: 'Mini-ITX',
+  matx: 'Micro-ATX',
 };
 
 /** The first required connector the available set cannot cover, honouring counts. */
@@ -392,6 +399,55 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
     id: 'storage-interface-offered',
     severity: 'incompatible',
     sources: ['storage.interface', 'motherboard.m2Slots', 'motherboard.sataPorts'],
+  },
+  {
+    evaluate(parts) {
+      const { case: pcCase, motherboard } = parts;
+      if (motherboard === undefined || pcCase === undefined)
+        return null;
+      const size = FORM_FACTOR_LABEL[motherboard.formFactor];
+      const rule = `the case does not support the ${size} board`;
+      return {
+        rule,
+        statement: `the case supports the ${size} board`,
+        violation: pcCase.formFactors.includes(motherboard.formFactor) ? null : rule,
+      };
+    },
+    id: 'case-fits-board',
+    severity: 'incompatible',
+    sources: ['case.formFactors', 'motherboard.formFactor'],
+  },
+  {
+    evaluate(parts) {
+      const { case: pcCase, gpu } = parts;
+      if (gpu === undefined || pcCase === undefined)
+        return null;
+      const rule = `the ${gpu.lengthMm} mm card exceeds the case's ${pcCase.maxGpuLengthMm} mm clearance`;
+      return {
+        rule,
+        statement: `the ${gpu.lengthMm} mm card fits the case's ${pcCase.maxGpuLengthMm} mm clearance`,
+        violation: gpu.lengthMm > pcCase.maxGpuLengthMm ? rule : null,
+      };
+    },
+    id: 'case-fits-gpu-length',
+    severity: 'incompatible',
+    sources: ['case.maxGpuLengthMm', 'gpu.lengthMm'],
+  },
+  {
+    evaluate(parts) {
+      const { case: pcCase, cooler } = parts;
+      if (cooler === undefined || pcCase === undefined)
+        return null;
+      const rule = `the ${cooler.heightMm} mm cooler exceeds the case's ${pcCase.maxCoolerHeightMm} mm clearance`;
+      return {
+        rule,
+        statement: `the ${cooler.heightMm} mm cooler fits the case's ${pcCase.maxCoolerHeightMm} mm clearance`,
+        violation: cooler.heightMm > pcCase.maxCoolerHeightMm ? rule : null,
+      };
+    },
+    id: 'case-fits-cooler-height',
+    severity: 'incompatible',
+    sources: ['case.maxCoolerHeightMm', 'cooler.heightMm'],
   },
 ];
 

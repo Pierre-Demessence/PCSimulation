@@ -7,11 +7,12 @@ Product-level feature list. One line per feature: name — description — owner
 - **Workload profiles** — seeded streaming, dependent random and mixed access
   streams, so two builds are always compared on identical work. — owner: Pierre
 - **Assembled builds** — a build holds one part per kind (CPU, memory,
-  motherboard, and the compatibility-only graphics card and power supply), each
+  motherboard, and the compatibility-only graphics card, power supply, storage
+  drive, CPU cooler and case), each
   "Not added" until the reader adds it and fills in its values; a part that is
   absent contributes no checks of its own, and the memory path (CPU, memory,
-  motherboard) must be present for a bottleneck run — a graphics card or supply
-  is optional and only feeds the compatibility checks. — owner: Pierre
+  motherboard) must be present for a bottleneck run — the other parts are
+  optional and only feed the compatibility checks. — owner: Pierre
 - **Bottleneck classification** — reports per-resource utilisation, then labels
   the run resource-bound (naming the saturated part) or latency-bound (naming
   the dependency chain). — owner: Pierre
@@ -19,9 +20,13 @@ Product-level feature list. One line per feature: name — description — owner
   sourced to the fields they read: the CPU socket against the board, the CPU's
   memory-controller support and the board's acceptance against the DIMM's
   generation, the board's channel and speed caps, the graphics card's PCIe lanes
-  and generation against the board, every card and board power lead against the
-  supply's connectors, the summed wattage against the supply's rating, and
-  whether any part can drive a display. Each carries a severity — `not compatible`
+  and generation against the board (an NVMe drive narrows the lane budget),
+  every card and board power lead against the
+  supply's connectors, the summed wattage against the supply's rating, whether
+  any part can drive a display, the cooler against the CPU socket and TDP, the
+  drive's interface against the board's M.2 and SATA slots, and the case against
+  the board form factor, the graphics card length and the cooler height. Each
+  carries a severity — `not compatible`
   for parts that cannot work together, `out of spec` for a part that works below
   spec — as a word beside a ✓/✘ glyph, never colour alone. A part outside spec is
   still simulated: the comparison is the lesson, so nothing is blocked.

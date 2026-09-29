@@ -12,6 +12,9 @@ export type Socket = 'am4' | 'am5' | 'lga1200' | 'lga1700' | 'lga1851';
 /** PCIe generation. Compatibility-only. */
 export type PcieVersion = 3 | 4 | 5;
 
+/** Motherboard form factor, largest to smallest. Compatibility-only. */
+export type FormFactor = 'atx' | 'eatx' | 'itx' | 'matx';
+
 /** A power lead a part needs or a supply provides. Compatibility-only. */
 export type PowerConnector = '12vhpwr' | 'atx-24' | 'eps-8' | 'pcie-6' | 'pcie-8';
 
@@ -67,6 +70,8 @@ export interface MotherboardSpec {
   readonly id: string;
   /** Compatibility-only: checked against the CPU, ignored by the core. */
   readonly socket: Socket;
+  /** Compatibility-only: the case must support this form factor. */
+  readonly formFactor: FormFactor;
   readonly allowedGenerations: readonly MemoryGeneration[];
   readonly dimmSlots: number;
   readonly maxChannels: number;

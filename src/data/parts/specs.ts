@@ -1,4 +1,4 @@
-import type { HardwareConfig, PcieVersion, PowerConnector, Socket } from '@/sim';
+import type { FormFactor, HardwareConfig, PcieVersion, PowerConnector, Socket } from '@/sim';
 
 /** How a drive attaches. Compatibility-only. */
 export type StorageInterface = 'nvme' | 'sata';
@@ -43,6 +43,15 @@ export interface CoolerSpec {
   readonly heightMm: number;
 }
 
+/** A case. Compatibility-only: it bounds the board size and the parts it holds. */
+export interface CaseSpec {
+  readonly id: string;
+  readonly identity: string;
+  readonly formFactors: readonly FormFactor[];
+  readonly maxGpuLengthMm: number;
+  readonly maxCoolerHeightMm: number;
+}
+
 /**
  * The compatibility view of a build: the memory-path config fields plus the
  * sim-less parts. The rules walk this, so a GPU or PSU rule reads its part even
@@ -53,4 +62,5 @@ export interface CompatParts extends Partial<HardwareConfig> {
   readonly psu?: PsuSpec;
   readonly storage?: StorageSpec;
   readonly cooler?: CoolerSpec;
+  readonly case?: CaseSpec;
 }

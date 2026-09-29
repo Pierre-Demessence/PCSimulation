@@ -22,6 +22,7 @@ export const DDR5_MEMORY = memorySpec('ddr5', 5600, 36);
 export const DDR3_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr3'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr3',
   maxChannels: 2,
   maxMtPerSecond: 1600,
@@ -36,6 +37,7 @@ export const DDR3_BOARD: MotherboardSpec = {
 export const DDR4_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr4'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
@@ -50,6 +52,7 @@ export const DDR4_BOARD: MotherboardSpec = {
 export const DDR5_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr5'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr5',
   maxChannels: 4,
   maxMtPerSecond: 6000,
@@ -92,6 +95,7 @@ export function testBuild(overrides: Partial<HardwareConfig> = {}): Build {
     psu: null,
     storage: null,
     cooler: null,
+    case: null,
   };
 }
 

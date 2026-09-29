@@ -1,9 +1,10 @@
 import type { Build } from './build';
-import type { CoolerSpec, GpuSpec, PsuSpec, StorageInterface, StorageSpec } from './parts/specs';
+import type { CaseSpec, CoolerSpec, GpuSpec, PsuSpec, StorageInterface, StorageSpec } from './parts/specs';
 import type {
   CacheHierarchy,
   CacheSpec,
   CpuSpec,
+  FormFactor,
   LevelId,
   MemoryGeneration,
   MemorySpec,
@@ -20,7 +21,7 @@ import { BASELINE_CPU, CACHE_HIERARCHY, CYCLES_PER_ISSUE, memorySpec } from './p
  * What the user picks and swaps. A part owns one or more slots; the CPU owns its
  * three cache levels, because that is where they are.
  */
-export type PartId = 'cooler' | 'cpu' | 'gpu' | 'memory' | 'motherboard' | 'psu' | 'storage';
+export type PartId = 'case' | 'cooler' | 'cpu' | 'gpu' | 'memory' | 'motherboard' | 'psu' | 'storage';
 
 /** What the model consumes: one entry per position of `HardwareConfig`. */
 export type SlotId = LevelId | 'motherboard';
@@ -161,6 +162,14 @@ const POWER_CONNECTOR_LABELS: Record<PowerConnector, string> = {
   'pcie-8': '8-pin PCIe',
 };
 
+const FORM_FACTORS: readonly FormFactor[] = ['eatx', 'atx', 'matx', 'itx'];
+const FORM_FACTOR_LABELS: Record<FormFactor, string> = {
+  atx: 'ATX',
+  eatx: 'E-ATX',
+  itx: 'Mini-ITX',
+  matx: 'Micro-ATX',
+};
+
 /**
  * Steps finer than this are not used, so rounding at this width removes the
  * binary floating-point noise a step like 0.05 would otherwise leave behind
@@ -197,6 +206,10 @@ function isSocket(value: string): value is Socket {
 
 function isPowerConnector(value: string): value is PowerConnector {
   return (POWER_CONNECTORS as readonly string[]).includes(value);
+}
+
+function isFormFactor(value: string): value is FormFactor {
+  return (FORM_FACTORS as readonly string[]).includes(value);
 }
 
 const STORAGE_INTERFACES: readonly { readonly value: StorageInterface; readonly label: string }[] = [
@@ -541,6 +554,7 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
   blank: {
     allowedGenerations: ['ddr3', 'ddr4', 'ddr5'],
     dimmSlots: 4,
+    formFactor: 'atx',
     id: 'mb-blank',
     maxChannels: 4,
     maxMtPerSecond: 6400,
@@ -564,6 +578,17 @@ const motherboardPart: PartDefinition<MotherboardSpec> = {
       label: 'Socket',
       options: SOCKETS.map(socket => ({ label: SOCKET_LABELS[socket], value: socket })),
       with: (part, value) => ({ ...part, socket: isSocket(value) ? value : part.socket }),
+    }),
+    choice<MotherboardSpec>({
+      control: 'choice',
+      effect: 'validated',
+      get: part => part.formFactor,
+      group: 'motherboard',
+      help: 'The board size. A compatibility rule checks the case supports it; the simulation ignores it.',
+      id: 'formFactor',
+      label: 'Form factor',
+      options: FORM_FACTORS.map(formFactor => ({ label: FORM_FACTOR_LABELS[formFactor], value: formFactor })),
+      with: (part, value) => ({ ...part, formFactor: isFormFactor(value) ? value : part.formFactor }),
     }),
     numeric<MotherboardSpec>({
       control: 'count',
@@ -927,10 +952,10 @@ const coolerPart: PartDefinition<CoolerSpec> = {
     }),
     numeric<CoolerSpec>({
       control: 'range',
-      effect: 'display-only',
+      effect: 'validated',
       get: part => part.heightMm,
       group: 'cooler',
-      help: 'The cooler height. A future rule checks it against the case; nothing simulates it.',
+      help: 'The cooler height. A compatibility rule checks it against the case clearance.',
       id: 'heightMm',
       label: 'Height',
       max: 200,
@@ -945,6 +970,62 @@ const coolerPart: PartDefinition<CoolerSpec> = {
   write: (build, part) => ({ ...build, cooler: part }),
 };
 
+const casePart: PartDefinition<CaseSpec> = {
+  blank: {
+    formFactors: ['eatx', 'atx', 'matx', 'itx'],
+    id: 'case-blank',
+    identity: 'Custom case',
+    maxCoolerHeightMm: 170,
+    maxGpuLengthMm: 400,
+  },
+  id: 'case',
+  label: 'Case',
+  parameters: [
+    flags<CaseSpec>({
+      control: 'flags',
+      effect: 'validated',
+      get: part => part.formFactors,
+      group: 'case',
+      help: 'The board sizes the case can hold. A compatibility rule checks the motherboard form factor is among them.',
+      id: 'formFactors',
+      label: 'Board form factors',
+      options: FORM_FACTORS.map(formFactor => ({ label: FORM_FACTOR_LABELS[formFactor], value: formFactor })),
+      with: (part, value) => ({ ...part, formFactors: value.filter(isFormFactor) }),
+    }),
+    numeric<CaseSpec>({
+      control: 'range',
+      effect: 'validated',
+      get: part => part.maxGpuLengthMm,
+      group: 'case',
+      help: 'The longest graphics card the case takes. A compatibility rule checks the GPU length against it.',
+      id: 'maxGpuLengthMm',
+      label: 'Max GPU length',
+      max: 500,
+      min: 150,
+      step: 5,
+      unit: 'mm',
+      with: (part, value) => ({ ...part, maxGpuLengthMm: value }),
+    }),
+    numeric<CaseSpec>({
+      control: 'range',
+      effect: 'validated',
+      get: part => part.maxCoolerHeightMm,
+      group: 'case',
+      help: 'The tallest cooler the case takes. A compatibility rule checks the cooler height against it.',
+      id: 'maxCoolerHeightMm',
+      label: 'Max cooler height',
+      max: 250,
+      min: 40,
+      step: 5,
+      unit: 'mm',
+      with: (part, value) => ({ ...part, maxCoolerHeightMm: value }),
+    }),
+  ],
+  read: build => build.case,
+  slots: [],
+  write: (build, part) => ({ ...build, case: part }),
+};
+
 const PARTS: readonly PartDefinition<unknown>[] = [
   cpuPart,
   memoryPart,
@@ -953,6 +1034,7 @@ const PARTS: readonly PartDefinition<unknown>[] = [
   psuPart,
   storagePart,
   coolerPart,
+  casePart,
 ] as unknown as readonly PartDefinition<unknown>[];
 
 export function partDefinitions(): readonly PartDefinition<unknown>[] {

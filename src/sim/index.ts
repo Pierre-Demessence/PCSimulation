@@ -16,6 +16,7 @@ export type {
   CacheHierarchy,
   CacheSpec,
   CpuSpec,
+  FormFactor,
   HardwareConfig,
   LevelId,
   MemoryGeneration,

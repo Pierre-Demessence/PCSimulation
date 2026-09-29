@@ -24,6 +24,12 @@ function groupLabel(group: string): string {
       return 'Graphics card';
     case 'psu':
       return 'Power supply';
+    case 'storage':
+      return 'Storage';
+    case 'cooler':
+      return 'CPU cooler';
+    case 'case':
+      return 'Case';
     default:
       return group;
   }

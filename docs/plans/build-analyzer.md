@@ -200,7 +200,7 @@ export interface CompatRule {
 | B2 | Compatibility vocabulary + engine: sockets, chipsets, form factors, connectors, severity; CPU↔board socket the first new check | shipped |
 | B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | shipped |
 | B4 | Storage + cooler: interface + ports, socket support, TDP headroom | shipped |
-| B5 | Case + physical fit: form factor, GPU length, cooler height, radiator support | not started |
+| B5 | Case + physical fit: form factor, GPU length, cooler height | shipped |
 | B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | not started |
 | UI | Full view-layer rewrite: single-page, windowless, build-list spine + organised analysis (design TBD) | not started |
 
@@ -320,13 +320,21 @@ capacity) and `CoolerSpec` (supported sockets, TDP rating, height) join
 
 ### B5 — Case and physical fit
 
-- [ ] Add `CaseSpec` (supported form factors, max GPU length, max cooler height,
-      radiator support); extend `Build`.
-- [ ] Checks: the board's form factor fits the case; the GPU length ≤ the case
-      max; the cooler height ≤ the case max. Physical fit was a non-goal of both
-      earlier plans and is promoted here because the analyzer is now the point.
-- [ ] Tests: an oversize GPU is `incompatible`; an ATX board in an ITX case is
-      `incompatible`.
+Shipped, on the sim-less-part pattern. A `FormFactor` vocabulary joins
+`src/sim/types.ts`, the motherboard gained a `formFactor`, and `CaseSpec`
+(supported form factors, max GPU length, max cooler height) joins
+`parts/specs.ts` and `CompatParts`. Radiator support is deferred (no cooler
+models a radiator yet).
+
+- [x] Add `CaseSpec`; extend `Build`, `PartId`, `toConfigParts`, `removePart`,
+      and register a `casePart` with `slots: []`. The case owns a `formFactors`
+      flags descriptor and `maxGpuLengthMm`/`maxCoolerHeightMm` ranges; the board
+      owns a new `formFactor` choice.
+- [x] Checks: the case supports the board's form factor (`incompatible`); the
+      GPU length ≤ the case's clearance (`incompatible`); the cooler height ≤ the
+      case's clearance (`incompatible`).
+- [x] Tests: an ITX-only case rejects an ATX board; an over-long card and an
+      over-tall cooler are `incompatible`; a card exactly at the clearance fits.
 
 ### B6 — Real-world catalogue
 

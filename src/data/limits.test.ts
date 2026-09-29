@@ -10,6 +10,7 @@ import { BASELINE_CPU, CACHE_HIERARCHY, CYCLES_PER_ISSUE, memorySpec } from './p
 const DDR4_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr4'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr4',
   maxChannels: 2,
   maxMtPerSecond: 3200,
@@ -24,6 +25,7 @@ const DDR4_BOARD: MotherboardSpec = {
 const DDR5_BOARD: MotherboardSpec = {
   allowedGenerations: ['ddr5'],
   dimmSlots: 4,
+  formFactor: 'atx',
   id: 'mb-ddr5',
   maxChannels: 4,
   maxMtPerSecond: 6000,
