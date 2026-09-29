@@ -3,7 +3,7 @@ import type { LevelId, SimResult } from '@/sim';
 import type { WorkloadKind } from '@/workloads';
 
 import { boardLayout } from '@/board';
-import { buildChecks, buildLimits, completeBuild, missingParts, partDefinition, partDefinitions, toConfigParts } from '@/data';
+import { buildChecks, buildLimits, completeBuild, missingParts, partDefinition, partDefinitions, storageDescriptors, toConfigParts } from '@/data';
 import {
   formatBandwidth,
   formatCount,
@@ -123,6 +123,22 @@ function partSections(input: BuildSheetInput): readonly PartSection[] {
       title: definition.label,
     });
   }
+  // Storage is the one kind a build may hold several of, so it is rendered a
+  // drive at a time rather than through the single-slot walk above.
+  input.build.storage.forEach((drive, index) => {
+    sections.push({
+      origin: null,
+      part: 'storage',
+      rows: storageDescriptors.map(parameter => ({
+        effect: parameter.effect,
+        help: parameter.help,
+        id: parameter.id,
+        label: parameter.label,
+        value: renderValue(parameter, drive),
+      })),
+      title: input.build.storage.length > 1 ? `${drive.identity} (drive ${index + 1})` : drive.identity,
+    });
+  });
   return sections;
 }
 

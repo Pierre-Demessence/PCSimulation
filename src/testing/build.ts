@@ -6,7 +6,7 @@ import type {
   MemorySpec,
   MotherboardSpec,
 } from '@/sim';
-import { addPart, BASELINE_CPU, CACHE_HIERARCHY, GIB, memorySpec, partDefinitions } from '@/data';
+import { addPart, addStorage, BASELINE_CPU, CACHE_HIERARCHY, GIB, memorySpec, partDefinitions, STORAGE_BLANK } from '@/data';
 
 /**
  * A complete machine the tests can simulate, written out part by part.
@@ -93,7 +93,7 @@ export function testBuild(overrides: Partial<HardwareConfig> = {}): Build {
     motherboard: config.motherboard,
     gpu: null,
     psu: null,
-    storage: null,
+    storage: [],
     cooler: null,
     case: null,
   };
@@ -104,5 +104,5 @@ export function testFullBuild(): Build {
   let build = testBuild();
   for (const definition of partDefinitions())
     build = addPart(build, definition.id);
-  return build;
+  return addStorage(build, STORAGE_BLANK);
 }

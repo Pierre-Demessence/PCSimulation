@@ -859,61 +859,61 @@ const psuPart: PartDefinition<PsuSpec> = {
   write: (build, part) => ({ ...build, psu: part }),
 };
 
-const storagePart: PartDefinition<StorageSpec> = {
-  blank: {
-    capacityBytes: 1024 * GIB_BYTES,
-    id: 'storage-blank',
-    identity: 'Custom drive',
-    interface: 'nvme',
-    pcieLanes: 4,
-  },
-  id: 'storage',
-  label: 'Storage',
-  parameters: [
-    choice<StorageSpec>({
-      control: 'choice',
-      effect: 'validated',
-      get: part => part.interface,
-      group: 'storage',
-      help: 'How the drive attaches. A compatibility rule checks the board offers it; an NVMe drive also takes PCIe lanes from the graphics slot.',
-      id: 'interface',
-      label: 'Interface',
-      options: STORAGE_INTERFACES.map(option => ({ label: option.label, value: option.value })),
-      with: (part, value) => ({ ...part, interface: isStorageInterface(value) ? value : part.interface }),
-    }),
-    numeric<StorageSpec>({
-      control: 'count',
-      effect: 'validated',
-      get: part => part.pcieLanes,
-      group: 'storage',
-      help: 'The PCIe lanes an NVMe drive occupies, shared with the graphics slot. A SATA drive uses none.',
-      id: 'pcieLanes',
-      label: 'PCIe lanes',
-      max: 4,
-      min: 0,
-      step: 1,
-      unit: 'count',
-      with: (part, value) => ({ ...part, pcieLanes: value }),
-    }),
-    numeric<StorageSpec>({
-      control: 'range',
-      effect: 'display-only',
-      get: part => part.capacityBytes,
-      group: 'storage',
-      help: 'How much the drive holds. Nothing reads it yet; it is recorded so the part is complete.',
-      id: 'capacityBytes',
-      label: 'Capacity',
-      max: 8 * 1024 * GIB_BYTES,
-      min: GIB_BYTES,
-      step: GIB_BYTES,
-      unit: 'bytes',
-      with: (part, value) => ({ ...part, capacityBytes: value }),
-    }),
-  ],
-  read: build => build.storage,
-  slots: [],
-  write: (build, part) => ({ ...build, storage: part }),
+/** A drive's blank values, the starting point for "enter your own". */
+export const STORAGE_BLANK: StorageSpec = {
+  capacityBytes: 1024 * GIB_BYTES,
+  id: 'storage-blank',
+  identity: 'Custom drive',
+  interface: 'nvme',
+  pcieLanes: 4,
 };
+
+/**
+ * The drive's editable characteristics. Storage is the one kind a build may hold
+ * several of, so it lives outside the single-slot `PartDefinition` registry and
+ * is edited a drive at a time through `applyStorageParameter`.
+ */
+export const storageDescriptors = [
+  choice<StorageSpec>({
+    control: 'choice',
+    effect: 'validated',
+    get: part => part.interface,
+    group: 'storage',
+    help: 'How the drive attaches. A compatibility rule checks the board offers it; an NVMe drive also takes PCIe lanes from the graphics slot.',
+    id: 'interface',
+    label: 'Interface',
+    options: STORAGE_INTERFACES.map(option => ({ label: option.label, value: option.value })),
+    with: (part, value) => ({ ...part, interface: isStorageInterface(value) ? value : part.interface }),
+  }),
+  numeric<StorageSpec>({
+    control: 'count',
+    effect: 'validated',
+    get: part => part.pcieLanes,
+    group: 'storage',
+    help: 'The PCIe lanes an NVMe drive occupies, shared with the graphics slot. A SATA drive uses none.',
+    id: 'pcieLanes',
+    label: 'PCIe lanes',
+    max: 4,
+    min: 0,
+    step: 1,
+    unit: 'count',
+    with: (part, value) => ({ ...part, pcieLanes: value }),
+  }),
+  numeric<StorageSpec>({
+    control: 'range',
+    effect: 'display-only',
+    get: part => part.capacityBytes,
+    group: 'storage',
+    help: 'How much the drive holds. Nothing reads it yet; it is recorded so the part is complete.',
+    id: 'capacityBytes',
+    label: 'Capacity',
+    max: 8 * 1024 * GIB_BYTES,
+    min: GIB_BYTES,
+    step: GIB_BYTES,
+    unit: 'bytes',
+    with: (part, value) => ({ ...part, capacityBytes: value }),
+  }),
+] as unknown as readonly Parameter<unknown>[];
 
 const coolerPart: PartDefinition<CoolerSpec> = {
   blank: {
@@ -1033,7 +1033,6 @@ const PARTS: readonly PartDefinition<unknown>[] = [
   motherboardPart,
   gpuPart,
   psuPart,
-  storagePart,
   coolerPart,
   casePart,
 ] as unknown as readonly PartDefinition<unknown>[];
@@ -1098,6 +1097,22 @@ export function applyParameter(
   if (refused !== null)
     return { build, refused };
   return { build: next, refused: null };
+}
+
+/**
+ * Applies one characteristic to a single drive. Storage carries no cross-part
+ * invariant, so it clamps to the descriptor's range and never refuses.
+ */
+export function applyStorageParameter(
+  drive: StorageSpec,
+  parameterId: string,
+  value: ParameterValue,
+): { drive: StorageSpec; refused: string | null } {
+  const parameter = storageDescriptors.find(candidate => candidate.id === parameterId);
+  if (parameter === undefined)
+    throw new Error(`storage has no characteristic named ${parameterId}`);
+  const erased = parameter as unknown as ErasedParameter;
+  return { drive: erased.with(drive, coerce(erased, value)) as StorageSpec, refused: null };
 }
 
 function coerce(parameter: ErasedParameter, value: ParameterValue): unknown {

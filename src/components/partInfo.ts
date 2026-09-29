@@ -1,5 +1,6 @@
-import type { Check, Parameter, PartDefinition, PartId } from '@/data';
+import type { Check, Parameter, PartDefinition, PartId, StorageSpec } from '@/data';
 
+import { storageDescriptors } from '@/data';
 import { formatUnit } from '@/render/format';
 
 export type PartStatus = 'bad' | 'warn';
@@ -41,6 +42,16 @@ export function partSummary(definition: PartDefinition<unknown>, part: unknown):
         .map(id => definition.parameters.find(parameter => parameter.id === id))
         .filter((parameter): parameter is Parameter<unknown> => parameter !== undefined);
   return chosen.map(parameter => renderValue(parameter, part)).join(' · ');
+}
+
+/** A short headline for one drive, since storage is edited outside the registry. */
+export function storageSummary(drive: StorageSpec): string {
+  const ids = SUMMARY_FIELDS.storage ?? [];
+  return ids
+    .map(id => storageDescriptors.find(parameter => parameter.id === id))
+    .filter((parameter): parameter is Parameter<unknown> => parameter !== undefined)
+    .map(parameter => renderValue(parameter, drive))
+    .join(' · ');
 }
 
 function partOfSource(source: string): PartId | null {

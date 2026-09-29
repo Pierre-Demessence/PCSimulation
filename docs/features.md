@@ -7,12 +7,14 @@ Product-level feature list. One line per feature: name — description — owner
 - **Workload profiles** — seeded streaming, dependent random and mixed access
   streams, so two builds are always compared on identical work. — owner: Pierre
 - **Assembled builds** — a build holds one part per kind (CPU, memory,
-  motherboard, and the compatibility-only graphics card, power supply, storage
-  drive, CPU cooler and case), each
+  motherboard, and the compatibility-only graphics card, power supply, CPU
+  cooler and case), plus **several storage drives**, each
   "Not added" until the reader adds it and fills in its values; a part that is
   absent contributes no checks of its own, and the memory path (CPU, memory,
   motherboard) must be present for a bottleneck run — the other parts are
-  optional and only feed the compatibility checks. — owner: Pierre
+  optional and only feed the compatibility checks. The board's M.2 and SATA slots
+  are checked against the whole set of drives, and each NVMe drive takes PCIe
+  lanes from the graphics card. — owner: Pierre
 - **Real-part catalogue** — an empty slot offers a "Choose a part…" list of real
   curated components (CPUs, boards, memory, GPUs, supplies, drives, coolers,
   cases) across every socket and both DDR generations; choosing one writes its

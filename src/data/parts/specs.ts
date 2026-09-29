@@ -60,7 +60,7 @@ export interface CaseSpec {
 export interface CompatParts extends Partial<HardwareConfig> {
   readonly gpu?: GpuSpec;
   readonly psu?: PsuSpec;
-  readonly storage?: StorageSpec;
+  readonly storage?: readonly StorageSpec[];
   readonly cooler?: CoolerSpec;
   readonly case?: CaseSpec;
 }

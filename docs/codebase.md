@@ -10,10 +10,12 @@
 - `src/workloads/` — seeded access-stream generation (`rng.ts`, `generate.ts`).
 - `src/data/` — part data and the rules over it.
   - `build.ts` — the build in progress: a set of real parts (`cpu`, `memory`,
-    `motherboard`, `gpu`, `psu`, `storage`, `cooler`, `case`, any of which may be
-    absent), decoupled from the simulation config. `completeBuild` projects a
-    `HardwareConfig` from the memory-path parts and `toConfigParts` a `CompatParts`
-    for the rules, plus `hasPart`, `missingParts`, `addPart` and `removePart`.
+    `motherboard`, `gpu`, `psu`, `cooler`, `case`, any of which may be absent,
+    plus `storage` as a **list** of drives), decoupled from the simulation
+    config. `completeBuild` projects a `HardwareConfig` from the memory-path parts
+    and `toConfigParts` a `CompatParts` for the rules, plus `hasPart`,
+    `missingParts`, `addPart`, `removePart`, and `addStorage`/`removeStorageAt`/
+    `replaceStorageAt` for the multi-instance drives.
   - `parts/specs.ts` — the spec sheets of the sim-less parts (`GpuSpec`,
     `PsuSpec`, `StorageSpec`, `CoolerSpec`, `CaseSpec`) and `CompatParts`, the
     compatibility view the rules walk (a `Partial<HardwareConfig>` plus the

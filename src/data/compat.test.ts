@@ -190,26 +190,44 @@ describe('validateConfiguration', () => {
   it('rejects a drive the board has no slot for', () => {
     const problems = validateConfiguration({
       motherboard: { ...testConfig().motherboard, m2Slots: 0 },
-      storage: BASE_STORAGE,
+      storage: [BASE_STORAGE],
     });
-    expect(problems.some(problem => problem.includes('no M.2 slot'))).toBe(true);
+    expect(problems.some(problem => problem.includes('M.2 slot'))).toBe(true);
   });
 
   it('rejects a SATA drive the board has no port for', () => {
     const problems = validateConfiguration({
       motherboard: { ...testConfig().motherboard, sataPorts: 0 },
-      storage: { ...BASE_STORAGE, interface: 'sata', pcieLanes: 0 },
+      storage: [{ ...BASE_STORAGE, interface: 'sata', pcieLanes: 0 }],
     });
-    expect(problems.some(problem => problem.includes('no SATA slot'))).toBe(true);
+    expect(problems.some(problem => problem.includes('SATA slot'))).toBe(true);
   });
 
-  it('narrows the GPU lane budget when an M.2 drive is populated', () => {
+  it('rejects more drives than the board has slots for', () => {
+    const problems = validateConfiguration({
+      motherboard: { ...testConfig().motherboard, m2Slots: 1 },
+      storage: [BASE_STORAGE, BASE_STORAGE],
+    });
+    expect(problems.some(problem => problem.includes('M.2'))).toBe(true);
+  });
+
+  it('accepts several drives that fit the board slots', () => {
+    const problems = validateConfiguration({
+      motherboard: { ...testConfig().motherboard, m2Slots: 2, sataPorts: 4 },
+      storage: [BASE_STORAGE, BASE_STORAGE, { ...BASE_STORAGE, interface: 'sata', pcieLanes: 0 }],
+    });
+    expect(problems.some(problem => problem.includes('slot'))).toBe(false);
+  });
+
+  it('narrows the GPU lane budget further as M.2 drives are added', () => {
     const gpu: GpuSpec = { ...BASE_GPU, pcieLanes: 20 };
     const board = testConfig().motherboard;
     const withoutM2 = validateConfiguration({ gpu, motherboard: board });
-    const withM2 = validateConfiguration({ gpu, motherboard: board, storage: BASE_STORAGE });
+    const withOne = validateConfiguration({ gpu, motherboard: board, storage: [BASE_STORAGE] });
+    const withTwo = validateConfiguration({ gpu, motherboard: { ...board, m2Slots: 2 }, storage: [BASE_STORAGE, BASE_STORAGE] });
     expect(withoutM2.some(problem => problem.includes('PCIe lanes'))).toBe(false);
-    expect(withM2.some(problem => problem.includes('PCIe lanes'))).toBe(true);
+    expect(withOne.some(problem => problem.includes('PCIe lanes'))).toBe(true);
+    expect(withTwo.some(problem => problem.includes('4 are free') || problem.includes('PCIe lanes'))).toBe(true);
   });
 
   it('rejects a board the case cannot hold', () => {

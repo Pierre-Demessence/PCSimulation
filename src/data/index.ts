@@ -1,4 +1,4 @@
-export { addPart, completeBuild, emptyBuild, hasPart, missingParts, removePart, toConfigParts } from './build';
+export { addPart, addStorage, completeBuild, emptyBuild, hasPart, missingParts, removePart, removeStorageAt, replaceStorageAt, toConfigParts } from './build';
 export type { Build } from './build';
 export { catalogueFor } from './catalogue';
 export type { CatalogueChoice } from './catalogue';
@@ -7,7 +7,7 @@ export type { Check } from './checks';
 export { validateConfiguration } from './compat';
 export { buildLimits } from './limits';
 export type { Limit, LimitInput } from './limits';
-export { applyParameter, partDefinition, partDefinitions } from './parameters';
+export { applyParameter, applyStorageParameter, partDefinition, partDefinitions, STORAGE_BLANK, storageDescriptors } from './parameters';
 export type {
   ChoiceParameter,
   CpuPart,

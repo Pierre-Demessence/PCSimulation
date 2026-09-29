@@ -1,10 +1,11 @@
-import type { CaseSpec, CpuPart, PartId } from '@/data';
+import type { CaseSpec, CpuPart, PartId, StorageSpec } from '@/data';
 
 import type { MemorySpec, MotherboardSpec } from '@/sim';
 
 import { describe, expect, it } from 'vitest';
 
 import {
+  addStorage,
   BASELINE_CPU,
   buildChecks,
   CACHE_HIERARCHY,
@@ -34,8 +35,11 @@ function specOf(kind: PartId, id: string): unknown {
 
 function assemble(parts: readonly { readonly kind: PartId; readonly spec: unknown }[]) {
   let build = emptyBuild();
-  for (const { kind, spec } of parts)
-    build = partDefinition(kind).write(build, spec);
+  for (const { kind, spec } of parts) {
+    build = kind === 'storage'
+      ? addStorage(build, spec as StorageSpec)
+      : partDefinition(kind).write(build, spec);
+  }
   return build;
 }
 

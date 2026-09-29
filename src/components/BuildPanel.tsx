@@ -5,15 +5,18 @@ import type { Build, PartId } from '@/data';
 import { partDefinitions } from '@/data';
 
 import { PartSlot } from './PartSlot';
+import { StorageSection } from './StorageSection';
 
 export function BuildPanel({
   build,
   statuses,
   onPartChange,
+  onStorageChange,
 }: {
   readonly build: Build;
   readonly statuses: Partial<Record<PartId, PartStatus>>;
   readonly onPartChange: (part: PartId, build: Build, origin: string | null) => void;
+  readonly onStorageChange: (build: Build) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -27,6 +30,7 @@ export function BuildPanel({
           onChoose={(next, name) => onPartChange(definition.id, next, name)}
         />
       ))}
+      <StorageSection build={build} status={statuses.storage} onChange={onStorageChange} />
     </div>
   );
 }

@@ -271,9 +271,11 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
       const { gpu, motherboard } = parts;
       if (gpu === undefined || motherboard === undefined)
         return null;
-      const m2Lanes = parts.storage?.interface === 'nvme' ? parts.storage.pcieLanes : 0;
+      const m2Lanes = (parts.storage ?? [])
+        .filter(drive => drive.interface === 'nvme')
+        .reduce((total, drive) => total + drive.pcieLanes, 0);
       const available = motherboard.pcieLanes - m2Lanes;
-      const shared = m2Lanes > 0 ? `, less ${m2Lanes} for the M.2 drive` : '';
+      const shared = m2Lanes > 0 ? `, less ${m2Lanes} for the M.2 drive(s)` : '';
       const rule = `the card wants ${gpu.pcieLanes} PCIe lanes, and ${available} are free (the board has ${motherboard.pcieLanes}${shared})`;
       return {
         rule,
@@ -383,20 +385,27 @@ export const CONFIGURATION_RULES: readonly ConfigurationRule[] = [
   },
   {
     evaluate(parts) {
-      const { motherboard, storage } = parts;
-      if (motherboard === undefined || storage === undefined)
+      const { motherboard } = parts;
+      const drives = parts.storage ?? [];
+      if (motherboard === undefined || drives.length === 0)
         return null;
-      const nvme = storage.interface === 'nvme';
-      const offered = nvme ? motherboard.m2Slots : motherboard.sataPorts;
-      const name = nvme ? 'M.2' : 'SATA';
-      const rule = `the board has no ${name} slot for the drive`;
+      const nvme = drives.filter(drive => drive.interface === 'nvme').length;
+      const sata = drives.length - nvme;
+      const over = nvme > motherboard.m2Slots
+        ? { count: nvme, have: motherboard.m2Slots, name: 'M.2' }
+        : sata > motherboard.sataPorts
+          ? { count: sata, have: motherboard.sataPorts, name: 'SATA' }
+          : null;
+      const rule = over === null
+        ? ''
+        : `${over.count} ${over.name} drive(s) need more than the board's ${over.have} ${over.name} slot(s)`;
       return {
-        rule,
-        statement: `the board offers a ${name} slot for the drive`,
-        violation: offered < 1 ? rule : null,
+        rule: rule === '' ? 'the board runs out of drive slots' : rule,
+        statement: 'the board has an M.2 or SATA slot for every drive',
+        violation: over === null ? null : rule,
       };
     },
-    id: 'storage-interface-offered',
+    id: 'storage-slots-available',
     severity: 'incompatible',
     sources: ['storage.interface', 'motherboard.m2Slots', 'motherboard.sataPorts'],
   },

@@ -8,7 +8,7 @@ import { BuildPanel } from './BuildPanel';
 
 function Harness() {
   const [build, setBuild] = useState(() => emptyBuild());
-  return <BuildPanel build={build} statuses={{}} onPartChange={(_part, next) => setBuild(next)} />;
+  return <BuildPanel build={build} statuses={{}} onPartChange={(_part, next) => setBuild(next)} onStorageChange={setBuild} />;
 }
 
 describe('buildPanel', () => {

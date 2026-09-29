@@ -80,7 +80,8 @@ export function App() {
       <main className="grid min-h-0 flex-1 gap-px bg-border md:grid-cols-[minmax(24rem,2fr)_3fr]">
         <section aria-label="Build" className="overflow-auto bg-background p-6">
           <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Build</h2>
-          <BuildPanel build={build} statuses={statuses} onPartChange={onPartChange} />
+          <BuildPanel build={build} statuses={statuses} onPartChange={onPartChange} onStorageChange={setBuild} />
+          )
         </section>
         <section aria-label="Analysis" className="overflow-auto bg-background p-6">
           <AnalysisPanel sheet={sheet} workload={workload} onWorkloadChange={setWorkload} />

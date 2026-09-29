@@ -136,6 +136,18 @@ it. The v0.2 GPU and v0.3 storage simulations remain deferred.
 - Per-level MSHRs and a real prefetcher, which would let the cache rows show
   contention for miss slots rather than a single generous limit.
 
+## Analyzer follow-ups
+
+On top of the shipped analyzer (B1–B6):
+
+- **Multiple storage drives** — a build holds several drives, with the slot and
+  lane checks aggregated over them. Shipped; see
+  [plans/done/multi-storage.md](plans/done/multi-storage.md).
+- **Monitors** — a display as a part whose ports are checked against the
+  graphics card's outputs: warn when an adapter is needed or when the card's
+  output cannot drive the monitor's resolution/refresh. Its own wave, not yet
+  written up.
+
 ## Non-goals
 
 Stated as the current intended state, not as history.

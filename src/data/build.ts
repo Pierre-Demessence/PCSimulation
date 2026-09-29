@@ -18,14 +18,14 @@ export interface Build {
   readonly motherboard: MotherboardSpec | null;
   readonly gpu: GpuSpec | null;
   readonly psu: PsuSpec | null;
-  readonly storage: StorageSpec | null;
+  readonly storage: readonly StorageSpec[];
   readonly cooler: CoolerSpec | null;
   readonly case: CaseSpec | null;
 }
 
 /** Where every build starts: nothing added. */
 export function emptyBuild(): Build {
-  return { cpu: null, memory: null, motherboard: null, gpu: null, psu: null, storage: null, cooler: null, case: null };
+  return { cpu: null, memory: null, motherboard: null, gpu: null, psu: null, storage: [], cooler: null, case: null };
 }
 
 /**
@@ -76,7 +76,7 @@ export function toConfigParts(build: Build): CompatParts {
     parts.gpu = build.gpu;
   if (build.psu !== null)
     parts.psu = build.psu;
-  if (build.storage !== null)
+  if (build.storage.length > 0)
     parts.storage = build.storage;
   if (build.cooler !== null)
     parts.cooler = build.cooler;
@@ -110,7 +110,7 @@ export function removePart(build: Build, part: PartId): Build {
     case 'psu':
       return { ...build, psu: null };
     case 'storage':
-      return { ...build, storage: null };
+      return { ...build, storage: [] };
     case 'cooler':
       return { ...build, cooler: null };
     case 'case':
@@ -121,4 +121,19 @@ export function removePart(build: Build, part: PartId): Build {
       return unreachable;
     }
   }
+}
+
+/** Appends a drive. Storage is the one kind a build may hold several of. */
+export function addStorage(build: Build, drive: StorageSpec): Build {
+  return { ...build, storage: [...build.storage, drive] };
+}
+
+/** Removes the drive at an index, leaving the rest in order. */
+export function removeStorageAt(build: Build, index: number): Build {
+  return { ...build, storage: build.storage.filter((_, position) => position !== index) };
+}
+
+/** Replaces the drive at an index, for the per-drive editor. */
+export function replaceStorageAt(build: Build, index: number, drive: StorageSpec): Build {
+  return { ...build, storage: build.storage.map((current, position) => (position === index ? drive : current)) };
 }

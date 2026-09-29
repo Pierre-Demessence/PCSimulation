@@ -186,8 +186,10 @@ export function AnalysisPanel({
         <TabsContent value="parts" className="flex flex-col gap-4 pt-2">
           {sheet.parts.length === 0
             ? empty('No parts added yet.')
-            : sheet.parts.map(section => (
-                <div key={section.part}>
+            : sheet.parts.map((section, index) => (
+                // Storage yields several sections that share a part id, so position is the key.
+                // eslint-disable-next-line react/no-array-index-key
+                <div key={`${section.part}-${index}`}>
                   <h3 className="mb-1 text-sm font-medium">
                     {section.title}
                     {section.origin !== null && (
