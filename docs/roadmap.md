@@ -1,15 +1,20 @@
 # Roadmap
 
 Living document: what is planned, in what order, and what is deliberately out
-of scope. The current focus is the [build-sheet plan](plans/build-sheet.md) —
-S2 to S4, on top of the v0.1 memory path (CPU + RAM + motherboard).
+of scope. The [build analyzer](plans/done/build-analyzer.md) has shipped: its
+data waves B1–B6 turned the sandbox into a PCPartPicker-style compatibility
+analyzer across all part kinds, with the bottleneck simulation as one analysis
+rather than the definition of a build. The current focus is the view-layer
+rewrite tracked in [ui-redo.md](plans/ui-redo.md).
 
 ## Where we are
 
 v0.1's simulation core and its presentation layer are built: the discrete-event
 memory path, the workload profiles, the bottleneck classifier, and the build
-sheet that reports a build in words. Lint, tests and build are green. See the
-[v0.1 plan](plans/pc-simulation.md).
+sheet that reports a build in words. On top of it, the analyzer now checks every
+part against every other — socket, memory, PCIe, power, cooling, storage and
+physical fit — and a real-part catalogue lets you pick components by name. Lint,
+tests and build are green. See the [v0.1 plan](plans/pc-simulation.md).
 
 The visualisation face draws the machine as a picture: the 3D model, or the same
 machine seen flat. See the [board view plan](plans/done/board-view.md).
@@ -43,7 +48,7 @@ The project is becoming a build tool as well as a picture of a machine. Instead 
 editing the fixed parts of the memory path, the reader assembles a build: each
 part is "Not added" until it is added, and today every part is entered by hand.
 A catalogue of real parts is the mechanism that replaces typing the numbers —
-see [component customization](plans/component-customization.md), whose W2 owns
+see [component customization](plans/done/component-customization.md), whose W2 owns
 it. The tool answers two separate questions:
 
 - **Does this work at all?** Compatibility: memory generation and DIMM count
@@ -54,7 +59,7 @@ Those are different axes. The board's caps warn and the run proceeds
 (`src/data/compat.ts`); the sheet states each rule as met or not met and never
 blocks the run, because a DIMM outside the board's spec is the lesson.
 
-S1 of [the build-sheet plan](plans/build-sheet.md) ships the assembly, the
+S1 of [the build-sheet plan](plans/done/build-sheet.md) ships the assembly, the
 limits and the first verdict — `Build` as a partial core, the part picker,
 `buildLimits` and `buildChecks`, and the sheet over the memory path. Its wave
 table carries S2–S4: the parts the model does not reach (GPU facts, the PCIe lane
@@ -112,7 +117,7 @@ it. The v0.2 GPU and v0.3 storage simulations remain deferred.
 ## Deferred within component customization
 
 - Sharing a build as a URL, so a build can be linked rather than described. See
-  [plans/component-customization.md](plans/component-customization.md).
+  [plans/done/component-customization.md](plans/done/component-customization.md).
 - Component templates for GPU, storage and PSU parts, which arrive with their
   own waves above.
 - Several parts of one kind, and the compatibility verdict that needs — the

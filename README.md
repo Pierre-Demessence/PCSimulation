@@ -1,12 +1,16 @@
 # PC Simulation
 
-An educational sandbox that simulates a PC's hardware data path — CPU, caches
-and memory — and shows *why* one set of parts performs differently from
-another. It is deliberately not an emulator: no instructions, no OS, no
-software running on top.
+An educational sandbox that **analyses a PC build**: you assemble parts — or pick
+real ones from a catalogue — and it tells you whether they fit and where the
+build is bottlenecked. It is PCPartPicker's compatibility verdict plus the
+data-transfer bottleneck PCPartPicker cannot show, over CPU, caches and memory.
+It is deliberately not an emulator: no instructions, no OS, no software running
+on top.
 
-The whole point is one loop: run a workload, find the saturated link, swap a
-part, and watch the bottleneck move somewhere else.
+The loop it makes primary: assemble a build → the tool checks every part against
+every other in plain language → and, when the memory path is complete, it runs
+the workload and names the saturated link. Swap a part and both the verdict and
+the bottleneck update.
 
 ## What it shows
 

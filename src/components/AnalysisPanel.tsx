@@ -188,7 +188,12 @@ export function AnalysisPanel({
             ? empty('No parts added yet.')
             : sheet.parts.map(section => (
                 <div key={section.part}>
-                  <h3 className="mb-1 text-sm font-medium">{section.title}</h3>
+                  <h3 className="mb-1 text-sm font-medium">
+                    {section.title}
+                    {section.origin !== null && (
+                      <span className="ml-2 font-normal text-muted-foreground">{section.origin}</span>
+                    )}
+                  </h3>
                   <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
                     {section.rows.map(row => (
                       <div key={row.id} className="col-span-2 grid grid-cols-subgrid" title={row.help}>

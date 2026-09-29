@@ -201,7 +201,7 @@ export interface CompatRule {
 | B3 | GPU + PSU as real parts: PCIe slot/lanes/version, power connectors, wattage budget | shipped |
 | B4 | Storage + cooler: interface + ports, socket support, TDP headroom | shipped |
 | B5 | Case + physical fit: form factor, GPU length, cooler height | shipped |
-| B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | not started |
+| B6 | Real-world catalogue per kind (promotes customization W2) as the primary add route | shipped |
 | UI | Full view-layer rewrite: single-page, windowless, build-list spine + organised analysis (design TBD) | not started |
 
 Each wave is landable on its own and none blocks a run. The bottleneck sim is
@@ -338,68 +338,37 @@ models a radiator yet).
 
 ### B6 — Real-world catalogue
 
-**Sourcing decision: a build-time importer, not hand-authoring and not a live
-API.** There is no official API for PC part specs — PCPartPicker has none and its
-ToS forbids scraping; retail APIs carry listings, not compatibility fields. So the
-catalogue is **imported once at build time from a static dataset and checked in**,
-which keeps the sandbox offline (it has no network dependency today) and avoids
-authoring thousands of parts by hand.
+Shipped as a build-time importer. `scripts/catalogue/build-catalogue.ts` reads a
+checked-in snapshot of `docyx/pc-part-dataset`, maps each curated part's display
+fields, merges the hand-authored compatibility fields from `enrichment.ts`, and
+emits `src/data/catalogue/catalogue.json`. The app imports only that JSON through
+`catalogueFor(part)`; it never reads the snapshot or the network. Run
+`npm run catalogue:build` to refresh; see `scripts/catalogue/PROVENANCE.md`.
 
-- **Primary source: `docyx/pc-part-dataset`** — ~66 k parts scraped from
-  PCPartPicker, per-category JSON, MIT-licensed repo, refreshed 2025. It is a
-  **listing** dataset, not a compatibility one: it carries identity, price and the
-  display specs (clock, TDP, capacity, form factor, wattage, length) but **not**
-  most compatibility fields — the CPU has **no socket**, the PSU **no connector
-  inventory**, the GPU **no power draw**. The full field-by-field mapping and the
-  gaps are in the appendix. Caveat, noted so it is a decision and not an accident:
-  the *data* is a PCPartPicker scrape, so its provenance is a ToS gray area even
-  though the code is MIT. Acceptable for a non-commercial educational sandbox
-  importing a static snapshot; **Wikidata SPARQL** is the fully-clean fallback if
-  that ever needs to change, at the cost of coverage and heavier normalisation.
-- **Import plus enrichment, not bulk import.** Because the compatibility fields
-  are largely absent, the catalogue is the dataset's display fields *enriched* by
-  hand-authored lookups. The highest-value one is a compact **microarchitecture →
-  { socket, memory generations }** table (a few dozen rows) that unlocks CPU
-  socket and memory support for every CPU the dataset lists — `microarchitecture`
-  is one of the few fields it does carry. The sparse remainder (PSU connectors,
-  GPU power, cooler sockets/height, case clearances) is hand-set per curated
-  entry, which is affordable only because the set is small.
-- **Curated, not exhaustive.** The importer trims to a few dozen representative
-  parts per kind across generations, because this is a teaching sandbox: a
-  socket mismatch and a weak PSU are taught better by a legible set than by 66 k
-  rows, and a small set stays accurate (the catalogue-accuracy risk below).
-- **Constraint this puts on B1/B2:** choose spec field names that are *mappable*
-  from the dataset (socket, form factor, tdp, memory support, wattage,
-  connectors). For fields the dataset lacks (exact PCIe lanes, connector
-  inventory, cooler height, case GPU clearance), derive, default, or expose as a
-  "not specified" fact — never invent a number.
-
-- [ ] Add `src/data/catalogue/`: a one-time importer/normaliser that maps the
-      source dataset's fields → our spec schema and emits a checked-in
-      `catalogue.json`; the importer, the source snapshot and a provenance note
-      live beside it, and it is re-runnable to refresh. The app imports only the
-      emitted JSON, never the network.
-- [ ] Author the enrichment lookups the importer applies (see the mapping
-      appendix): the **microarchitecture → { socket, memory generations }** table
-      first, then the hand-set fields the dataset lacks per curated entry (PSU
-      connectors, GPU power draw + connectors, cooler socket/TDP/height, case
-      clearances). Keep them beside the importer as data a reader can check
-      against the real part.
-- [ ] Each entry carries an `identity` naming the part it claims to be; where a
-      field is absent in the source it is defaulted or marked "not specified"
-      rather than guessed (customization W2's sourcing discipline).
-- [ ] The part picker gains the catalogue as its primary route: choosing a real
-      part writes its whole spec and records the entry in `origin`
-      (`src/sheet/model.ts@27`), with "enter your own" the secondary route.
-- [ ] Keep catalogue CPUs on the model's fixed 4 GHz / one-core issue rate for
-      the *simulated* fields, so naming a real CPU does not silently move every
-      v0.1 number (customization W2's standing instruction); the real socket,
-      TDP and generation support are honoured because those are compatibility
-      fields the sim ignores.
-- [ ] Tests: catalogue ids unique; every catalogue part passes its own kind's
-      checks in a matching board; a build assembled from a matched set produces
-      the v0.1 numbers for everything the sim reads; the importer is covered by a
-      fixture rather than the live dataset, so tests stay offline.
+- [x] Add the importer, the checked-in snapshot (`scripts/catalogue/source/`)
+      and a provenance note beside it, re-runnable via `npm run catalogue:build`;
+      the emitted `catalogue.json` and the `catalogueFor` accessor live in
+      `src/data/catalogue/` and are all the app imports. `tsx` runs the importer.
+- [x] Author the enrichment lookups: the **microarchitecture →
+      { socket, memory generations }** table, then the hand-set fields the
+      dataset lacks per curated entry (board electricals, GPU power + connectors,
+      PSU connector inventory, cooler socket/TDP/height, case clearances). They
+      live in `enrichment.ts` beside the importer.
+- [x] Each entry names the part it claims to be; a field absent from the source
+      is enriched or mapped, never guessed. The set is curated (a few parts per
+      kind across all five sockets and both DDR generations).
+- [x] The picker gains the catalogue as its primary route: an empty slot offers
+      a "Choose a part…" list that writes the whole spec and records the entry in
+      `origin`, with "Enter your own" the secondary route. A hand edit, add or
+      remove clears the origin.
+- [x] Catalogue CPUs keep the model's fixed 4 GHz clock, service time and cache
+      hierarchy for the simulated fields; only the compatibility fields (socket,
+      memory generations, TDP, integrated graphics, cores) come from the dataset.
+- [x] Tests: catalogue ids unique; every part validates in a matching context
+      (a board per socket, memory per generation, a small board for a small
+      case); a matched build has no incompatibility; every CPU keeps the model's
+      simulated fields; and the pure importer helpers are covered by fixtures, so
+      the suite stays offline.
 
 ### UI — Full view-layer rewrite (design TBD)
 
@@ -453,20 +422,20 @@ new UI rather than the old bench.
 
 ## Docs to land with this feature
 
-- [ ] `docs/features.md` — lead with the compatibility analyzer across part
+- [x] `docs/features.md` — lead with the compatibility analyzer across part
       kinds; reframe the bottleneck sim as one analysis, not the definition of a
       build; keep the "honest about the unmodelled" entry.
-- [ ] `docs/codebase.md` — `src/data/parts/` (vocabulary + spec sheets),
+- [x] `docs/codebase.md` — `src/data/parts/` (vocabulary + spec sheets),
       `src/data/catalogue/`; note `Build` no longer equals `Partial<HardwareConfig>`
       and `completeBuild` is a projection.
-- [ ] `docs/roadmap.md` — the analyzer is the current focus; the v0.2–v0.4
+- [x] `docs/roadmap.md` — the analyzer is the current focus; the v0.2–v0.4
       *simulation* waves (GPU/storage/PSU bottlenecks) stay deferred behind their
       static-rule counterparts here.
-- [ ] `README.md` — the headline becomes "assemble a build, get a compatibility
+- [x] `README.md` — the headline becomes "assemble a build, get a compatibility
       verdict and a bottleneck" rather than "watch the data path".
-- [ ] Update the repo memory note (`/memories/repo/pc-simulation.md`), which
+- [x] Update the repo memory note (`/memories/repo/pc-simulation.md`), which
       still describes three views and a sim-centred model.
-- [ ] Move `build-sheet.md` and `component-customization.md` to
+- [x] Move `build-sheet.md` and `component-customization.md` to
       `docs/plans/done/`, and this plan too, in the final commit of B6.
 
 ## Requirements (EARS)

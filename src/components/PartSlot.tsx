@@ -11,7 +11,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { addPart, removePart } from '@/data';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { addPart, catalogueFor, removePart } from '@/data';
 
 import { PartEditor } from './PartEditor';
 import { partSummary } from './partInfo';
@@ -25,20 +32,42 @@ export function PartSlot({
   build,
   status,
   onChange,
+  onChoose,
 }: {
   readonly definition: PartDefinition<unknown>;
   readonly build: Build;
   readonly status: PartStatus | undefined;
   readonly onChange: (build: Build) => void;
+  readonly onChoose: (build: Build, name: string) => void;
 }) {
   const partValue = definition.read(build);
 
   if (partValue === null) {
+    const choices = catalogueFor(definition.id);
     return (
-      <div className="flex items-center justify-between rounded-lg border border-dashed px-4 py-3">
-        <span className="text-sm text-muted-foreground">{definition.label}</span>
+      <div className="flex items-center gap-2 rounded-lg border border-dashed px-4 py-3">
+        <span className="min-w-0 flex-1 text-sm text-muted-foreground">{definition.label}</span>
+        {choices.length > 0 && (
+          <Select
+            value=""
+            onValueChange={(id) => {
+              const choice = choices.find(candidate => candidate.id === id);
+              if (choice !== undefined)
+                onChoose(definition.write(build, choice.spec), choice.name);
+            }}
+          >
+            <SelectTrigger size="sm" className="w-52">
+              <SelectValue placeholder="Choose a part…" />
+            </SelectTrigger>
+            <SelectContent>
+              {choices.map(choice => (
+                <SelectItem key={choice.id} value={choice.id}>{choice.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button size="sm" variant="secondary" onClick={() => onChange(addPart(build, definition.id))}>
-          Add
+          Enter your own
         </Button>
       </div>
     );

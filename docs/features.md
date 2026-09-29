@@ -13,6 +13,14 @@ Product-level feature list. One line per feature: name — description — owner
   absent contributes no checks of its own, and the memory path (CPU, memory,
   motherboard) must be present for a bottleneck run — the other parts are
   optional and only feed the compatibility checks. — owner: Pierre
+- **Real-part catalogue** — an empty slot offers a "Choose a part…" list of real
+  curated components (CPUs, boards, memory, GPUs, supplies, drives, coolers,
+  cases) across every socket and both DDR generations; choosing one writes its
+  whole spec and records where it came from, while "Enter your own" stays the
+  hand-entry route. The catalogue is imported once at build time from a static
+  dataset and checked in — the app never touches the network. Named CPUs keep the
+  model's fixed simulated fields, so a real name changes the compatibility
+  verdict without silently moving the bottleneck numbers. — owner: Pierre
 - **Bottleneck classification** — reports per-resource utilisation, then labels
   the run resource-bound (naming the saturated part) or latency-bound (naming
   the dependency chain). — owner: Pierre

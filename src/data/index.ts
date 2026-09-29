@@ -1,5 +1,7 @@
 export { addPart, completeBuild, emptyBuild, hasPart, missingParts, removePart, toConfigParts } from './build';
 export type { Build } from './build';
+export { catalogueFor } from './catalogue';
+export type { CatalogueChoice } from './catalogue';
 export { buildChecks } from './checks';
 export type { Check } from './checks';
 export { validateConfiguration } from './compat';

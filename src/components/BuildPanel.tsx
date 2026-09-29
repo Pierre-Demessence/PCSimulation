@@ -9,11 +9,11 @@ import { PartSlot } from './PartSlot';
 export function BuildPanel({
   build,
   statuses,
-  onChange,
+  onPartChange,
 }: {
   readonly build: Build;
   readonly statuses: Partial<Record<PartId, PartStatus>>;
-  readonly onChange: (build: Build) => void;
+  readonly onPartChange: (part: PartId, build: Build, origin: string | null) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -23,7 +23,8 @@ export function BuildPanel({
           definition={definition}
           build={build}
           status={statuses[definition.id]}
-          onChange={onChange}
+          onChange={next => onPartChange(definition.id, next, null)}
+          onChoose={(next, name) => onPartChange(definition.id, next, name)}
         />
       ))}
     </div>

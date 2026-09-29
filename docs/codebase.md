@@ -10,10 +10,18 @@
 - `src/workloads/` — seeded access-stream generation (`rng.ts`, `generate.ts`).
 - `src/data/` — part data and the rules over it.
   - `build.ts` — the build in progress: a set of real parts (`cpu`, `memory`,
-    `motherboard`, any of which may be absent), decoupled from the simulation
-    config. `completeBuild` projects a `HardwareConfig` from the present parts and
-    `toConfigParts` a `Partial<HardwareConfig>` for the rules that still read that
-    shape, plus `hasPart`, `missingParts` and `addPart`.
+    `motherboard`, `gpu`, `psu`, `storage`, `cooler`, `case`, any of which may be
+    absent), decoupled from the simulation config. `completeBuild` projects a
+    `HardwareConfig` from the memory-path parts and `toConfigParts` a `CompatParts`
+    for the rules, plus `hasPart`, `missingParts`, `addPart` and `removePart`.
+  - `parts/specs.ts` — the spec sheets of the sim-less parts (`GpuSpec`,
+    `PsuSpec`, `StorageSpec`, `CoolerSpec`, `CaseSpec`) and `CompatParts`, the
+    compatibility view the rules walk (a `Partial<HardwareConfig>` plus the
+    sim-less parts).
+  - `catalogue/` — the app's view of the real-part catalogue: the checked-in
+    `catalogue.json` and `catalogueFor(part)`, which returns the curated parts of
+    a kind ready to write into a build. The importer that produces the JSON lives
+    outside `src`, in `scripts/catalogue/` (see below).
   - `presets.ts` — the shared constants a part is built from (`BASELINE_CPU`,
     `CACHE_HIERARCHY`, `MEMORY_DEFAULTS`) and `memorySpec`, which builds a DIMM
     spec from the numbers printed on the sticker.
@@ -77,6 +85,12 @@
   `%APP_NAME%` replaced from `brand.json`.
 - `vite.config.ts` / `vitest.config.ts` — build and test config; both share the `@/` alias and the React plugin.
 - `eslint.config.ts` — flat ESLint config.
+- `scripts/catalogue/` — the build-time catalogue importer, outside `src` so it
+  is not shipped or type-checked with the app. `build-catalogue.ts` reads the
+  checked-in `docyx/pc-part-dataset` snapshot in `source/`, merges the
+  hand-authored enrichment in `enrichment.ts`, and emits
+  `src/data/catalogue/catalogue.json`. Run with `npm run catalogue:build` (tsx);
+  see `PROVENANCE.md`.
 - `docs/` — project documentation (start at [INDEX.md](INDEX.md)).
 
 ## Planned

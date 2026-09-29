@@ -10,5 +10,5 @@ export default antfu({
     quotes: 'single',
     semi: true,
   },
-  ignores: ['dist/**', 'coverage/**', 'docs/**', 'src/components/ui/**'],
+  ignores: ['dist/**', 'coverage/**', 'docs/**', 'src/components/ui/**', 'scripts/**', 'src/data/catalogue/catalogue.json'],
 });

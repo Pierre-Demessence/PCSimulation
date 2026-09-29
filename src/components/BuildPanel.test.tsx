@@ -8,15 +8,15 @@ import { BuildPanel } from './BuildPanel';
 
 function Harness() {
   const [build, setBuild] = useState(() => emptyBuild());
-  return <BuildPanel build={build} statuses={{}} onChange={setBuild} />;
+  return <BuildPanel build={build} statuses={{}} onPartChange={(_part, next) => setBuild(next)} />;
 }
 
 describe('buildPanel', () => {
   it('adds a part and edits its whole spec in the Edit dialog', () => {
     render(<Harness />);
 
-    // Every slot starts absent with an Add control; the CPU is first.
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add' })[0]);
+    // Every slot starts absent with an "Enter your own" control; the CPU is first.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Enter your own' })[0]);
 
     // The row is compact until Edit opens the full-spec dialog.
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -30,7 +30,7 @@ describe('buildPanel', () => {
 
   it('removes a part', () => {
     render(<Harness />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Enter your own' })[0]);
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
@@ -39,7 +39,7 @@ describe('buildPanel', () => {
 
   it('restores the value and names the invariant when a change is refused', () => {
     render(<Harness />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Add' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Enter your own' })[0]);
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
     // 1 KiB of L3 cannot hold 32 ways of 64-byte lines, so widening is refused.

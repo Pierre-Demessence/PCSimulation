@@ -1,0 +1,1079 @@
+[
+  {
+    "id": "case:cooler-master-masterbox-q300l",
+    "kind": "case",
+    "name": "Cooler Master MasterBox Q300L",
+    "spec": {
+      "formFactors": [
+        "matx",
+        "itx"
+      ],
+      "id": "cooler-master-masterbox-q300l",
+      "identity": "Cooler Master MasterBox Q300L",
+      "maxCoolerHeightMm": 159,
+      "maxGpuLengthMm": 360
+    }
+  },
+  {
+    "id": "case:corsair-4000d-airflow",
+    "kind": "case",
+    "name": "Corsair 4000D Airflow",
+    "spec": {
+      "formFactors": [
+        "atx",
+        "matx",
+        "itx"
+      ],
+      "id": "corsair-4000d-airflow",
+      "identity": "Corsair 4000D Airflow",
+      "maxCoolerHeightMm": 170,
+      "maxGpuLengthMm": 360
+    }
+  },
+  {
+    "id": "case:fractal-design-north",
+    "kind": "case",
+    "name": "Fractal Design North",
+    "spec": {
+      "formFactors": [
+        "atx",
+        "matx",
+        "itx"
+      ],
+      "id": "fractal-design-north",
+      "identity": "Fractal Design North",
+      "maxCoolerHeightMm": 170,
+      "maxGpuLengthMm": 355
+    }
+  },
+  {
+    "id": "case:fractal-design-terra",
+    "kind": "case",
+    "name": "Fractal Design Terra",
+    "spec": {
+      "formFactors": [
+        "itx"
+      ],
+      "id": "fractal-design-terra",
+      "identity": "Fractal Design Terra",
+      "maxCoolerHeightMm": 77,
+      "maxGpuLengthMm": 322
+    }
+  },
+  {
+    "id": "case:lian-li-o11-dynamic-evo",
+    "kind": "case",
+    "name": "Lian Li O11 Dynamic EVO",
+    "spec": {
+      "formFactors": [
+        "eatx",
+        "atx",
+        "matx",
+        "itx"
+      ],
+      "id": "lian-li-o11-dynamic-evo",
+      "identity": "Lian Li O11 Dynamic EVO",
+      "maxCoolerHeightMm": 167,
+      "maxGpuLengthMm": 420
+    }
+  },
+  {
+    "id": "cooler:arctic-liquid-freezer-ii-240",
+    "kind": "cooler",
+    "name": "ARCTIC Liquid Freezer II 240",
+    "spec": {
+      "heightMm": 50,
+      "id": "arctic-liquid-freezer-ii-240",
+      "identity": "ARCTIC Liquid Freezer II 240",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 300
+    }
+  },
+  {
+    "id": "cooler:cooler-master-hyper-212-black-edition",
+    "kind": "cooler",
+    "name": "Cooler Master Hyper 212 Black Edition",
+    "spec": {
+      "heightMm": 159,
+      "id": "cooler-master-hyper-212-black-edition",
+      "identity": "Cooler Master Hyper 212 Black Edition",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 150
+    }
+  },
+  {
+    "id": "cooler:deepcool-ak400",
+    "kind": "cooler",
+    "name": "Deepcool AK400",
+    "spec": {
+      "heightMm": 155,
+      "id": "deepcool-ak400",
+      "identity": "Deepcool AK400",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 220
+    }
+  },
+  {
+    "id": "cooler:noctua-nh-d15-chromax-black",
+    "kind": "cooler",
+    "name": "Noctua NH-D15 chromax.black",
+    "spec": {
+      "heightMm": 165,
+      "id": "noctua-nh-d15-chromax-black",
+      "identity": "Noctua NH-D15 chromax.black",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 250
+    }
+  },
+  {
+    "id": "cooler:thermalright-peerless-assassin-120-se",
+    "kind": "cooler",
+    "name": "Thermalright Peerless Assassin 120 SE",
+    "spec": {
+      "heightMm": 155,
+      "id": "thermalright-peerless-assassin-120-se",
+      "identity": "Thermalright Peerless Assassin 120 SE",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 220
+    }
+  },
+  {
+    "id": "cpu:amd-ryzen-5-5600",
+    "kind": "cpu",
+    "name": "AMD Ryzen 5 5600",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 6,
+        "id": "amd-ryzen-5-5600",
+        "integratedGraphics": false,
+        "memoryGenerations": [
+          "ddr4"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "am4",
+        "tdpWatts": 65
+      }
+    }
+  },
+  {
+    "id": "cpu:amd-ryzen-5-7600",
+    "kind": "cpu",
+    "name": "AMD Ryzen 5 7600",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 6,
+        "id": "amd-ryzen-5-7600",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "am5",
+        "tdpWatts": 65
+      }
+    }
+  },
+  {
+    "id": "cpu:amd-ryzen-7-5800x3d",
+    "kind": "cpu",
+    "name": "AMD Ryzen 7 5800X3D",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 8,
+        "id": "amd-ryzen-7-5800x3d",
+        "integratedGraphics": false,
+        "memoryGenerations": [
+          "ddr4"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "am4",
+        "tdpWatts": 105
+      }
+    }
+  },
+  {
+    "id": "cpu:amd-ryzen-7-7800x3d",
+    "kind": "cpu",
+    "name": "AMD Ryzen 7 7800X3D",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 8,
+        "id": "amd-ryzen-7-7800x3d",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "am5",
+        "tdpWatts": 120
+      }
+    }
+  },
+  {
+    "id": "cpu:intel-core-i5-10400f",
+    "kind": "cpu",
+    "name": "Intel Core i5-10400F",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 6,
+        "id": "intel-core-i5-10400f",
+        "integratedGraphics": false,
+        "memoryGenerations": [
+          "ddr4"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1200",
+        "tdpWatts": 65
+      }
+    }
+  },
+  {
+    "id": "cpu:intel-core-i5-12400f",
+    "kind": "cpu",
+    "name": "Intel Core i5-12400F",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 6,
+        "id": "intel-core-i5-12400f",
+        "integratedGraphics": false,
+        "memoryGenerations": [
+          "ddr4",
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1700",
+        "tdpWatts": 65
+      }
+    }
+  },
+  {
+    "id": "cpu:intel-core-i5-13600k",
+    "kind": "cpu",
+    "name": "Intel Core i5-13600K",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 14,
+        "id": "intel-core-i5-13600k",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr4",
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1700",
+        "tdpWatts": 125
+      }
+    }
+  },
+  {
+    "id": "cpu:intel-core-i7-14700k",
+    "kind": "cpu",
+    "name": "Intel Core i7-14700K",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 20,
+        "id": "intel-core-i7-14700k",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr4",
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1700",
+        "tdpWatts": 125
+      }
+    }
+  },
+  {
+    "id": "cpu:intel-core-ultra-5-245k",
+    "kind": "cpu",
+    "name": "Intel Core Ultra 5 245K",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 14,
+        "id": "intel-core-ultra-5-245k",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1851",
+        "tdpWatts": 125
+      }
+    }
+  },
+  {
+    "id": "gpu:geforce-rtx-3060-ti",
+    "kind": "gpu",
+    "name": "GeForce RTX 3060 Ti",
+    "spec": {
+      "boardPowerWatts": 200,
+      "id": "geforce-rtx-3060-ti",
+      "identity": "GeForce RTX 3060 Ti",
+      "lengthMm": 242,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "pcie-8"
+      ]
+    }
+  },
+  {
+    "id": "gpu:geforce-rtx-4060",
+    "kind": "gpu",
+    "name": "GeForce RTX 4060",
+    "spec": {
+      "boardPowerWatts": 115,
+      "id": "geforce-rtx-4060",
+      "identity": "GeForce RTX 4060",
+      "lengthMm": 199,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "pcie-8"
+      ]
+    }
+  },
+  {
+    "id": "gpu:geforce-rtx-4070",
+    "kind": "gpu",
+    "name": "GeForce RTX 4070",
+    "spec": {
+      "boardPowerWatts": 200,
+      "id": "geforce-rtx-4070",
+      "identity": "GeForce RTX 4070",
+      "lengthMm": 261,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "pcie-8"
+      ]
+    }
+  },
+  {
+    "id": "gpu:geforce-rtx-4090",
+    "kind": "gpu",
+    "name": "GeForce RTX 4090",
+    "spec": {
+      "boardPowerWatts": 450,
+      "id": "geforce-rtx-4090",
+      "identity": "GeForce RTX 4090",
+      "lengthMm": 304,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "12vhpwr"
+      ]
+    }
+  },
+  {
+    "id": "gpu:radeon-rx-7800-xt",
+    "kind": "gpu",
+    "name": "Radeon RX 7800 XT",
+    "spec": {
+      "boardPowerWatts": 263,
+      "id": "radeon-rx-7800-xt",
+      "identity": "Radeon RX 7800 XT",
+      "lengthMm": 260,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "pcie-8",
+        "pcie-8"
+      ]
+    }
+  },
+  {
+    "id": "memory:corsair-vengeance-lpx-16-gb",
+    "kind": "memory",
+    "name": "Corsair Vengeance LPX 16 GB",
+    "spec": {
+      "accessOverheadNs": 60,
+      "capacityBytes": 17179869184,
+      "channels": 2,
+      "maxOutstandingMisses": 192,
+      "casLatency": 16,
+      "generation": "ddr4",
+      "id": "corsair-vengeance-lpx-16-gb",
+      "mtPerSecond": 3200,
+      "role": "pipe"
+    }
+  },
+  {
+    "id": "memory:g-skill-flare-x5-32-gb",
+    "kind": "memory",
+    "name": "G.Skill Flare X5 32 GB",
+    "spec": {
+      "accessOverheadNs": 60,
+      "capacityBytes": 34359738368,
+      "channels": 2,
+      "maxOutstandingMisses": 192,
+      "casLatency": 36,
+      "generation": "ddr5",
+      "id": "g-skill-flare-x5-32-gb",
+      "mtPerSecond": 6000,
+      "role": "pipe"
+    }
+  },
+  {
+    "id": "memory:g-skill-trident-z5-rgb-32-gb",
+    "kind": "memory",
+    "name": "G.Skill Trident Z5 RGB 32 GB",
+    "spec": {
+      "accessOverheadNs": 60,
+      "capacityBytes": 34359738368,
+      "channels": 2,
+      "maxOutstandingMisses": 192,
+      "casLatency": 32,
+      "generation": "ddr5",
+      "id": "g-skill-trident-z5-rgb-32-gb",
+      "mtPerSecond": 6400,
+      "role": "pipe"
+    }
+  },
+  {
+    "id": "motherboard:asrock-b460-steel-legend",
+    "kind": "motherboard",
+    "name": "ASRock B460 Steel Legend",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "asrock-b460-steel-legend",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 2933,
+      "pcieLanes": 20,
+      "pcieVersion": 3,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 6,
+      "socket": "lga1200"
+    }
+  },
+  {
+    "id": "motherboard:asrock-b550m-itx-ac",
+    "kind": "motherboard",
+    "name": "ASRock B550M-ITX/ac",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 2,
+      "formFactor": "itx",
+      "id": "asrock-b550m-itx-ac",
+      "m2Slots": 1,
+      "maxChannels": 2,
+      "maxMtPerSecond": 4400,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "am4"
+    }
+  },
+  {
+    "id": "motherboard:asrock-b550m-steel-legend",
+    "kind": "motherboard",
+    "name": "ASRock B550M Steel Legend",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "matx",
+      "id": "asrock-b550m-steel-legend",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 4400,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "am4"
+    }
+  },
+  {
+    "id": "motherboard:asrock-b860-pro-rs",
+    "kind": "motherboard",
+    "name": "ASRock B860 Pro RS",
+    "spec": {
+      "allowedGenerations": [
+        "ddr5"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "asrock-b860-pro-rs",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 6400,
+      "pcieLanes": 20,
+      "pcieVersion": 5,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "lga1851"
+    }
+  },
+  {
+    "id": "motherboard:asus-prime-b650-plus-wifi",
+    "kind": "motherboard",
+    "name": "Asus PRIME B650-PLUS WIFI",
+    "spec": {
+      "allowedGenerations": [
+        "ddr5"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "asus-prime-b650-plus-wifi",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 6400,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "am5"
+    }
+  },
+  {
+    "id": "motherboard:asus-prime-b660-plus-d4",
+    "kind": "motherboard",
+    "name": "Asus PRIME B660-PLUS D4",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "asus-prime-b660-plus-d4",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 3200,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "lga1700"
+    }
+  },
+  {
+    "id": "motherboard:gigabyte-b760-gaming-x-ax",
+    "kind": "motherboard",
+    "name": "Gigabyte B760 GAMING X AX",
+    "spec": {
+      "allowedGenerations": [
+        "ddr5"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "gigabyte-b760-gaming-x-ax",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 6000,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 4,
+      "socket": "lga1700"
+    }
+  },
+  {
+    "id": "motherboard:msi-mag-b550-tomahawk",
+    "kind": "motherboard",
+    "name": "MSI MAG B550 TOMAHAWK",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "msi-mag-b550-tomahawk",
+      "m2Slots": 2,
+      "maxChannels": 2,
+      "maxMtPerSecond": 4400,
+      "pcieLanes": 20,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 6,
+      "socket": "am4"
+    }
+  },
+  {
+    "id": "psu:corsair-cx650m-2021",
+    "kind": "psu",
+    "name": "Corsair CX650M (2021)",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8"
+      ],
+      "id": "corsair-cx650m-2021",
+      "identity": "Corsair CX650M (2021)",
+      "wattage": 650
+    }
+  },
+  {
+    "id": "psu:corsair-rm750e-2023",
+    "kind": "psu",
+    "name": "Corsair RM750e (2023)",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8",
+        "12vhpwr"
+      ],
+      "id": "corsair-rm750e-2023",
+      "identity": "Corsair RM750e (2023)",
+      "wattage": 750
+    }
+  },
+  {
+    "id": "psu:corsair-rm850e-2023",
+    "kind": "psu",
+    "name": "Corsair RM850e (2023)",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8",
+        "12vhpwr"
+      ],
+      "id": "corsair-rm850e-2023",
+      "identity": "Corsair RM850e (2023)",
+      "wattage": 850
+    }
+  },
+  {
+    "id": "psu:evga-supernova-650-ga",
+    "kind": "psu",
+    "name": "EVGA SuperNOVA 650 GA",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8",
+        "pcie-8"
+      ],
+      "id": "evga-supernova-650-ga",
+      "identity": "EVGA SuperNOVA 650 GA",
+      "wattage": 650
+    }
+  },
+  {
+    "id": "psu:msi-mag-a750gl-pcie5",
+    "kind": "psu",
+    "name": "MSI MAG A750GL PCIE5",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8",
+        "12vhpwr"
+      ],
+      "id": "msi-mag-a750gl-pcie5",
+      "identity": "MSI MAG A750GL PCIE5",
+      "wattage": 750
+    }
+  },
+  {
+    "id": "storage:crucial-mx500",
+    "kind": "storage",
+    "name": "Crucial MX500",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "crucial-mx500",
+      "identity": "Crucial MX500",
+      "interface": "sata",
+      "pcieLanes": 0
+    }
+  },
+  {
+    "id": "storage:crucial-p3-plus",
+    "kind": "storage",
+    "name": "Crucial P3 Plus",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "crucial-p3-plus",
+      "identity": "Crucial P3 Plus",
+      "interface": "nvme",
+      "pcieLanes": 4
+    }
+  },
+  {
+    "id": "storage:samsung-870-evo",
+    "kind": "storage",
+    "name": "Samsung 870 Evo",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "samsung-870-evo",
+      "identity": "Samsung 870 Evo",
+      "interface": "sata",
+      "pcieLanes": 0
+    }
+  },
+  {
+    "id": "storage:samsung-990-pro",
+    "kind": "storage",
+    "name": "Samsung 990 Pro",
+    "spec": {
+      "capacityBytes": 2000000000000,
+      "id": "samsung-990-pro",
+      "identity": "Samsung 990 Pro",
+      "interface": "nvme",
+      "pcieLanes": 4
+    }
+  },
+  {
+    "id": "storage:western-digital-black-sn770",
+    "kind": "storage",
+    "name": "Western Digital Black SN770",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "western-digital-black-sn770",
+      "identity": "Western Digital Black SN770",
+      "interface": "nvme",
+      "pcieLanes": 4
+    }
+  }
+]
