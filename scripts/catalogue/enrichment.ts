@@ -26,6 +26,7 @@ export const MICROARCH: Record<string, MicroarchInfo> = {
   'Raptor Lake': { memoryGenerations: ['ddr4', 'ddr5'], socket: 'lga1700' },
   'Raptor Lake Refresh': { memoryGenerations: ['ddr4', 'ddr5'], socket: 'lga1700' },
   'Rocket Lake': { memoryGenerations: ['ddr4'], socket: 'lga1200' },
+  'Skylake': { memoryGenerations: ['ddr4'], socket: 'lga1151' },
   'Zen 3': { memoryGenerations: ['ddr4'], socket: 'am4' },
   'Zen 4': { memoryGenerations: ['ddr5'], socket: 'am5' },
   'Zen 5': { memoryGenerations: ['ddr5'], socket: 'am5' },
@@ -37,6 +38,7 @@ export const CPU_NAMES: readonly string[] = [
   'AMD Ryzen 7 5800X3D',
   'AMD Ryzen 5 7600',
   'AMD Ryzen 7 7800X3D',
+  'Intel Core i5-6600K',
   'Intel Core i5-10400F',
   'Intel Core i5-12400F',
   'Intel Core i5-13600K',
@@ -112,6 +114,15 @@ export const BOARDS: Record<string, BoardEnrich> = {
     powerConnectors: STANDARD_BOARD_POWER,
     sataPorts: 4,
   },
+  'Asus Z170-P': {
+    allowedGenerations: ['ddr4'],
+    m2Slots: 1,
+    maxMtPerSecond: 3466,
+    pcieLanes: 20,
+    pcieVersion: 3,
+    powerConnectors: STANDARD_BOARD_POWER,
+    sataPorts: 6,
+  },
   'Gigabyte B760 GAMING X AX': {
     allowedGenerations: ['ddr5'],
     m2Slots: 2,
@@ -132,11 +143,17 @@ export const BOARDS: Record<string, BoardEnrich> = {
   },
 };
 
-/** The memory kits to curate, by exact dataset `name`. All fields map directly. */
-export const MEMORY_NAMES: readonly string[] = [
-  'Corsair Vengeance LPX 16 GB',
-  'G.Skill Flare X5 32 GB',
-  'G.Skill Trident Z5 RGB 32 GB',
+/** A memory kit to curate. `mtPerSecond` disambiguates kits that share a name across speeds. */
+export interface MemoryPick {
+  readonly name: string;
+  readonly mtPerSecond: number;
+}
+
+export const MEMORY_PICKS: readonly MemoryPick[] = [
+  { mtPerSecond: 2400, name: 'Kingston FURY 16 GB' },
+  { mtPerSecond: 3200, name: 'Corsair Vengeance LPX 16 GB' },
+  { mtPerSecond: 6000, name: 'G.Skill Flare X5 32 GB' },
+  { mtPerSecond: 6400, name: 'G.Skill Trident Z5 RGB 32 GB' },
 ];
 
 /** The GPU fields the dataset lacks, hand-set per curated chipset. */
@@ -149,6 +166,7 @@ export interface GpuEnrich {
 
 /** Curated GPUs, selected by dataset `chipset` (names collide across brands). */
 export const GPUS: Record<string, GpuEnrich> = {
+  'GeForce GTX 1060 6GB': { boardPowerWatts: 120, pcieLanes: 16, pcieVersion: 3, powerConnectors: ['pcie-6'] },
   'GeForce RTX 3060 Ti': { boardPowerWatts: 200, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
   'GeForce RTX 4060': { boardPowerWatts: 115, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
   'GeForce RTX 4070': { boardPowerWatts: 200, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
@@ -161,17 +179,30 @@ export const PSUS: Record<string, readonly PowerConnector[]> = {
   'Corsair CX650M (2021)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8'],
   'Corsair RM750e (2023)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
   'Corsair RM850e (2023)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
+  'Corsair VS550': ['atx-24', 'eps-8', 'pcie-6', 'pcie-8'],
   'EVGA SuperNOVA 650 GA': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', 'pcie-8'],
   'MSI MAG A750GL PCIE5': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
 };
 
-/** The drives to curate, by exact dataset `name`. Interface and lanes parse from the source. */
-export const STORAGE_NAMES: readonly string[] = [
-  'Samsung 990 Pro',
-  'Western Digital Black SN770',
-  'Crucial P3 Plus',
-  'Samsung 870 Evo',
-  'Crucial MX500',
+/**
+ * A drive to curate. `capacityGb` disambiguates capacities that share a name;
+ * `datasetInterface` picks the 2.5" SATA row over an M.2 SATA row of the same drive.
+ */
+export interface StoragePick {
+  readonly name: string;
+  readonly capacityGb: number;
+  readonly datasetInterface?: string;
+}
+
+export const STORAGE_PICKS: readonly StoragePick[] = [
+  { capacityGb: 2000, name: 'Samsung 990 Pro' },
+  { capacityGb: 1000, name: 'Western Digital Black SN770' },
+  { capacityGb: 1000, name: 'Crucial P3 Plus' },
+  { capacityGb: 1000, name: 'Samsung 870 Evo', datasetInterface: 'SATA 6.0 Gb/s' },
+  { capacityGb: 1000, name: 'Crucial MX500', datasetInterface: 'SATA 6.0 Gb/s' },
+  { capacityGb: 250, datasetInterface: 'SATA 6.0 Gb/s', name: 'Samsung 850 Evo' },
+  { capacityGb: 500, datasetInterface: 'SATA 6.0 Gb/s', name: 'Samsung 850 Evo' },
+  { capacityGb: 1000, datasetInterface: 'SATA 6.0 Gb/s', name: 'Western Digital Caviar Blue' },
 ];
 
 /** The cooler compatibility fields (all absent from the dataset), hand-set per name. */
@@ -181,11 +212,12 @@ export interface CoolerEnrich {
   readonly heightMm: number;
 }
 
-const MODERN_SOCKETS: readonly Socket[] = ['am4', 'am5', 'lga1200', 'lga1700', 'lga1851'];
+const MODERN_SOCKETS: readonly Socket[] = ['am4', 'am5', 'lga1151', 'lga1200', 'lga1700', 'lga1851'];
 
 export const COOLERS: Record<string, CoolerEnrich> = {
   'ARCTIC Liquid Freezer II 240': { heightMm: 50, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 300 },
   'Cooler Master Hyper 212 Black Edition': { heightMm: 159, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 150 },
+  'Cooler Master Hyper 212X': { heightMm: 159, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 180 },
   'Deepcool AK400': { heightMm: 155, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 220 },
   'Noctua NH-D15 chromax.black': { heightMm: 165, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 250 },
   'Thermalright Peerless Assassin 120 SE': { heightMm: 155, supportedSockets: MODERN_SOCKETS, tdpRatingWatts: 220 },
@@ -204,6 +236,7 @@ export const CASES: Record<string, CaseEnrich> = {
   'Fractal Design North': { maxCoolerHeightMm: 170, maxGpuLengthMm: 355 },
   'Fractal Design Terra': { maxCoolerHeightMm: 77, maxGpuLengthMm: 322 },
   'Lian Li O11 Dynamic EVO': { eatx: true, maxCoolerHeightMm: 167, maxGpuLengthMm: 420 },
+  'Zalman Z3 Plus': { maxCoolerHeightMm: 160, maxGpuLengthMm: 400 },
 };
 
 /** A URL-safe id from a product name: `AMD Ryzen 5 5600` -> `amd-ryzen-5-5600`. */
@@ -214,6 +247,7 @@ export function slug(name: string): string {
 const DATASET_SOCKETS: Record<string, Socket> = {
   AM4: 'am4',
   AM5: 'am5',
+  LGA1151: 'lga1151',
   LGA1200: 'lga1200',
   LGA1700: 'lga1700',
   LGA1851: 'lga1851',

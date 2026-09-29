@@ -12,13 +12,13 @@ import {
   COOLERS,
   CPU_NAMES,
   GPUS,
-  MEMORY_NAMES,
+  MEMORY_PICKS,
   MICROARCH,
   parseStorage,
   PSUS,
   slug,
   socketFromDataset,
-  STORAGE_NAMES,
+  STORAGE_PICKS,
 } from './enrichment.ts';
 
 /**
@@ -79,16 +79,19 @@ function importCpus(): readonly CatalogueEntry[] {
 
 function importMemory(): readonly CatalogueEntry[] {
   const rows = readRows('memory');
-  return MEMORY_NAMES.map((name) => {
-    const row = firstByName(rows, name);
+  return MEMORY_PICKS.map((pick) => {
+    const row = rows.find(candidate =>
+      candidate.name === pick.name && (candidate.speed as [number, number])[1] === pick.mtPerSecond);
+    if (row === undefined)
+      throw new Error(`no memory "${pick.name}" at ${pick.mtPerSecond} MT/s in the snapshot`);
     const [ddr, mtPerSecond] = row.speed as [number, number];
     const [moduleCount, moduleGb] = row.modules as [number, number];
     const spec = memorySpec(`ddr${ddr}` as 'ddr3' | 'ddr4' | 'ddr5', mtPerSecond, Number(row.cas_latency), {
       capacityBytes: moduleCount * moduleGb * GIB,
       channels: Math.min(moduleCount, 2),
-      id: slug(name),
+      id: slug(pick.name),
     });
-    return { id: `memory:${slug(name)}`, kind: 'memory', name, spec };
+    return { id: `memory:${slug(pick.name)}`, kind: 'memory', name: pick.name, spec };
   });
 }
 
@@ -145,17 +148,25 @@ function importPsus(): readonly CatalogueEntry[] {
 
 function importStorage(): readonly CatalogueEntry[] {
   const rows = readRows('internal-hard-drive');
-  return STORAGE_NAMES.map((name) => {
-    const row = firstByName(rows, name);
+  return STORAGE_PICKS.map((pick) => {
+    const row = rows.find(candidate =>
+      candidate.name === pick.name
+      && Number(candidate.capacity) === pick.capacityGb
+      && (pick.datasetInterface === undefined || candidate.interface === pick.datasetInterface));
+    if (row === undefined)
+      throw new Error(`no drive "${pick.name}" at ${pick.capacityGb} GB in the snapshot`);
     const { interface: storageInterface, pcieLanes } = parseStorage(String(row.interface));
+    const label = pick.capacityGb >= 1000 ? `${pick.capacityGb / 1000} TB` : `${pick.capacityGb} GB`;
+    const name = `${pick.name} ${label}`;
+    const idSlug = `${slug(pick.name)}-${pick.capacityGb}`;
     const spec = {
-      capacityBytes: Number(row.capacity) * 1_000_000_000,
-      id: slug(name),
+      capacityBytes: pick.capacityGb * 1_000_000_000,
+      id: idSlug,
       identity: name,
       interface: storageInterface,
       pcieLanes,
     };
-    return { id: `storage:${slug(name)}`, kind: 'storage', name, spec };
+    return { id: `storage:${idSlug}`, kind: 'storage', name, spec };
   });
 }
 

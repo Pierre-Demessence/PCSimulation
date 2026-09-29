@@ -78,6 +78,22 @@
     }
   },
   {
+    "id": "case:zalman-z3-plus",
+    "kind": "case",
+    "name": "Zalman Z3 Plus",
+    "spec": {
+      "formFactors": [
+        "atx",
+        "matx",
+        "itx"
+      ],
+      "id": "zalman-z3-plus",
+      "identity": "Zalman Z3 Plus",
+      "maxCoolerHeightMm": 160,
+      "maxGpuLengthMm": 400
+    }
+  },
+  {
     "id": "cooler:arctic-liquid-freezer-ii-240",
     "kind": "cooler",
     "name": "ARCTIC Liquid Freezer II 240",
@@ -88,6 +104,7 @@
       "supportedSockets": [
         "am4",
         "am5",
+        "lga1151",
         "lga1200",
         "lga1700",
         "lga1851"
@@ -106,11 +123,31 @@
       "supportedSockets": [
         "am4",
         "am5",
+        "lga1151",
         "lga1200",
         "lga1700",
         "lga1851"
       ],
       "tdpRatingWatts": 150
+    }
+  },
+  {
+    "id": "cooler:cooler-master-hyper-212x",
+    "kind": "cooler",
+    "name": "Cooler Master Hyper 212X",
+    "spec": {
+      "heightMm": 159,
+      "id": "cooler-master-hyper-212x",
+      "identity": "Cooler Master Hyper 212X",
+      "supportedSockets": [
+        "am4",
+        "am5",
+        "lga1151",
+        "lga1200",
+        "lga1700",
+        "lga1851"
+      ],
+      "tdpRatingWatts": 180
     }
   },
   {
@@ -124,6 +161,7 @@
       "supportedSockets": [
         "am4",
         "am5",
+        "lga1151",
         "lga1200",
         "lga1700",
         "lga1851"
@@ -142,6 +180,7 @@
       "supportedSockets": [
         "am4",
         "am5",
+        "lga1151",
         "lga1200",
         "lga1700",
         "lga1851"
@@ -160,6 +199,7 @@
       "supportedSockets": [
         "am4",
         "am5",
+        "lga1151",
         "lga1200",
         "lga1700",
         "lga1851"
@@ -513,6 +553,55 @@
     }
   },
   {
+    "id": "cpu:intel-core-i5-6600k",
+    "kind": "cpu",
+    "name": "Intel Core i5-6600K",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 4,
+        "id": "intel-core-i5-6600k",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr4"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1151",
+        "tdpWatts": 91
+      }
+    }
+  },
+  {
     "id": "cpu:intel-core-i7-14700k",
     "kind": "cpu",
     "name": "Intel Core i7-14700K",
@@ -609,6 +698,22 @@
         "socket": "lga1851",
         "tdpWatts": 125
       }
+    }
+  },
+  {
+    "id": "gpu:geforce-gtx-1060-6gb",
+    "kind": "gpu",
+    "name": "GeForce GTX 1060 6GB",
+    "spec": {
+      "boardPowerWatts": 120,
+      "id": "geforce-gtx-1060-6gb",
+      "identity": "GeForce GTX 1060 6GB",
+      "lengthMm": 243,
+      "pcieLanes": 16,
+      "pcieVersion": 3,
+      "powerConnectors": [
+        "pcie-6"
+      ]
     }
   },
   {
@@ -737,6 +842,22 @@
       "generation": "ddr5",
       "id": "g-skill-trident-z5-rgb-32-gb",
       "mtPerSecond": 6400,
+      "role": "pipe"
+    }
+  },
+  {
+    "id": "memory:kingston-fury-16-gb",
+    "kind": "memory",
+    "name": "Kingston FURY 16 GB",
+    "spec": {
+      "accessOverheadNs": 60,
+      "capacityBytes": 17179869184,
+      "channels": 2,
+      "maxOutstandingMisses": 192,
+      "casLatency": 15,
+      "generation": "ddr4",
+      "id": "kingston-fury-16-gb",
+      "mtPerSecond": 2400,
       "role": "pipe"
     }
   },
@@ -885,6 +1006,30 @@
     }
   },
   {
+    "id": "motherboard:asus-z170-p",
+    "kind": "motherboard",
+    "name": "Asus Z170-P",
+    "spec": {
+      "allowedGenerations": [
+        "ddr4"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "asus-z170-p",
+      "m2Slots": 1,
+      "maxChannels": 2,
+      "maxMtPerSecond": 3466,
+      "pcieLanes": 20,
+      "pcieVersion": 3,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 6,
+      "socket": "lga1151"
+    }
+  },
+  {
     "id": "motherboard:gigabyte-b760-gaming-x-ax",
     "kind": "motherboard",
     "name": "Gigabyte B760 GAMING X AX",
@@ -983,6 +1128,22 @@
     }
   },
   {
+    "id": "psu:corsair-vs550",
+    "kind": "psu",
+    "name": "Corsair VS550",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-6",
+        "pcie-8"
+      ],
+      "id": "corsair-vs550",
+      "identity": "Corsair VS550",
+      "wattage": 550
+    }
+  },
+  {
     "id": "psu:evga-supernova-650-ga",
     "kind": "psu",
     "name": "EVGA SuperNOVA 650 GA",
@@ -1017,63 +1178,99 @@
     }
   },
   {
-    "id": "storage:crucial-mx500",
+    "id": "storage:crucial-mx500-1000",
     "kind": "storage",
-    "name": "Crucial MX500",
+    "name": "Crucial MX500 1 TB",
     "spec": {
       "capacityBytes": 1000000000000,
-      "id": "crucial-mx500",
-      "identity": "Crucial MX500",
+      "id": "crucial-mx500-1000",
+      "identity": "Crucial MX500 1 TB",
       "interface": "sata",
       "pcieLanes": 0
     }
   },
   {
-    "id": "storage:crucial-p3-plus",
+    "id": "storage:crucial-p3-plus-1000",
     "kind": "storage",
-    "name": "Crucial P3 Plus",
+    "name": "Crucial P3 Plus 1 TB",
     "spec": {
       "capacityBytes": 1000000000000,
-      "id": "crucial-p3-plus",
-      "identity": "Crucial P3 Plus",
+      "id": "crucial-p3-plus-1000",
+      "identity": "Crucial P3 Plus 1 TB",
       "interface": "nvme",
       "pcieLanes": 4
     }
   },
   {
-    "id": "storage:samsung-870-evo",
+    "id": "storage:samsung-850-evo-250",
     "kind": "storage",
-    "name": "Samsung 870 Evo",
+    "name": "Samsung 850 Evo 250 GB",
     "spec": {
-      "capacityBytes": 1000000000000,
-      "id": "samsung-870-evo",
-      "identity": "Samsung 870 Evo",
+      "capacityBytes": 250000000000,
+      "id": "samsung-850-evo-250",
+      "identity": "Samsung 850 Evo 250 GB",
       "interface": "sata",
       "pcieLanes": 0
     }
   },
   {
-    "id": "storage:samsung-990-pro",
+    "id": "storage:samsung-850-evo-500",
     "kind": "storage",
-    "name": "Samsung 990 Pro",
+    "name": "Samsung 850 Evo 500 GB",
+    "spec": {
+      "capacityBytes": 500000000000,
+      "id": "samsung-850-evo-500",
+      "identity": "Samsung 850 Evo 500 GB",
+      "interface": "sata",
+      "pcieLanes": 0
+    }
+  },
+  {
+    "id": "storage:samsung-870-evo-1000",
+    "kind": "storage",
+    "name": "Samsung 870 Evo 1 TB",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "samsung-870-evo-1000",
+      "identity": "Samsung 870 Evo 1 TB",
+      "interface": "sata",
+      "pcieLanes": 0
+    }
+  },
+  {
+    "id": "storage:samsung-990-pro-2000",
+    "kind": "storage",
+    "name": "Samsung 990 Pro 2 TB",
     "spec": {
       "capacityBytes": 2000000000000,
-      "id": "samsung-990-pro",
-      "identity": "Samsung 990 Pro",
+      "id": "samsung-990-pro-2000",
+      "identity": "Samsung 990 Pro 2 TB",
       "interface": "nvme",
       "pcieLanes": 4
     }
   },
   {
-    "id": "storage:western-digital-black-sn770",
+    "id": "storage:western-digital-black-sn770-1000",
     "kind": "storage",
-    "name": "Western Digital Black SN770",
+    "name": "Western Digital Black SN770 1 TB",
     "spec": {
       "capacityBytes": 1000000000000,
-      "id": "western-digital-black-sn770",
-      "identity": "Western Digital Black SN770",
+      "id": "western-digital-black-sn770-1000",
+      "identity": "Western Digital Black SN770 1 TB",
       "interface": "nvme",
       "pcieLanes": 4
+    }
+  },
+  {
+    "id": "storage:western-digital-caviar-blue-1000",
+    "kind": "storage",
+    "name": "Western Digital Caviar Blue 1 TB",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "western-digital-caviar-blue-1000",
+      "identity": "Western Digital Caviar Blue 1 TB",
+      "interface": "sata",
+      "pcieLanes": 0
     }
   }
 ]

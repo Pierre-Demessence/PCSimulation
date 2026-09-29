@@ -69,7 +69,7 @@ describe('catalogue', () => {
       { kind: 'memory', spec: specOf('memory', 'memory:g-skill-flare-x5-32-gb') },
       { kind: 'gpu', spec: specOf('gpu', 'gpu:geforce-rtx-4070') },
       { kind: 'psu', spec: specOf('psu', 'psu:corsair-rm750e-2023') },
-      { kind: 'storage', spec: specOf('storage', 'storage:samsung-990-pro') },
+      { kind: 'storage', spec: specOf('storage', 'storage:samsung-990-pro-2000') },
       { kind: 'cooler', spec: specOf('cooler', 'cooler:thermalright-peerless-assassin-120-se') },
       { kind: 'case', spec: specOf('case', 'case:corsair-4000d-airflow') },
     ])).toEqual([]);
@@ -82,12 +82,23 @@ describe('catalogue', () => {
       { kind: 'memory', spec: specOf('memory', 'memory:corsair-vengeance-lpx-16-gb') },
       { kind: 'gpu', spec: specOf('gpu', 'gpu:geforce-rtx-4060') },
       { kind: 'psu', spec: specOf('psu', 'psu:evga-supernova-650-ga') },
-      { kind: 'storage', spec: specOf('storage', 'storage:crucial-mx500') },
+      { kind: 'storage', spec: specOf('storage', 'storage:crucial-mx500-1000') },
       { kind: 'cooler', spec: specOf('cooler', 'cooler:deepcool-ak400') },
       { kind: 'case', spec: specOf('case', 'case:fractal-design-north') },
     ])).toEqual([]);
   });
-
+  it('assembles the LGA1151 Skylake reference build with no incompatibility', () => {
+    expect(problemsFor([
+      { kind: 'cpu', spec: specOf('cpu', 'cpu:intel-core-i5-6600k') },
+      { kind: 'motherboard', spec: specOf('motherboard', 'motherboard:asus-z170-p') },
+      { kind: 'memory', spec: specOf('memory', 'memory:kingston-fury-16-gb') },
+      { kind: 'gpu', spec: specOf('gpu', 'gpu:geforce-gtx-1060-6gb') },
+      { kind: 'psu', spec: specOf('psu', 'psu:corsair-vs550') },
+      { kind: 'storage', spec: specOf('storage', 'storage:samsung-850-evo-250') },
+      { kind: 'cooler', spec: specOf('cooler', 'cooler:cooler-master-hyper-212x') },
+      { kind: 'case', spec: specOf('case', 'case:zalman-z3-plus') },
+    ])).toEqual([]);
+  });
   it('keeps every catalogue CPU on the model\'s simulated fields', () => {
     for (const choice of catalogueFor('cpu')) {
       const part = choice.spec as CpuPart;

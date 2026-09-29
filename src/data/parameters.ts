@@ -144,10 +144,11 @@ const MAX_SETS = 262_144;
 
 const MEMORY_GENERATIONS: readonly string[] = ['ddr3', 'ddr4', 'ddr5'];
 
-const SOCKETS: readonly Socket[] = ['am4', 'am5', 'lga1200', 'lga1700', 'lga1851'];
+const SOCKETS: readonly Socket[] = ['am4', 'am5', 'lga1151', 'lga1200', 'lga1700', 'lga1851'];
 const SOCKET_LABELS: Record<Socket, string> = {
   am4: 'AMD AM4',
   am5: 'AMD AM5',
+  lga1151: 'Intel LGA1151',
   lga1200: 'Intel LGA1200',
   lga1700: 'Intel LGA1700',
   lga1851: 'Intel LGA1851',

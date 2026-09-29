@@ -7,7 +7,7 @@ export type ResourceRole = 'budget' | 'delay' | 'pipe' | 'tank' | 'work';
 export type MemoryGeneration = 'ddr3' | 'ddr4' | 'ddr5';
 
 /** CPU and motherboard socket. Compatibility-only: the simulation never reads it. */
-export type Socket = 'am4' | 'am5' | 'lga1200' | 'lga1700' | 'lga1851';
+export type Socket = 'am4' | 'am5' | 'lga1151' | 'lga1200' | 'lga1700' | 'lga1851';
 
 /** PCIe generation. Compatibility-only. */
 export type PcieVersion = 3 | 4 | 5;
