@@ -99,6 +99,19 @@ describe('catalogue', () => {
       { kind: 'case', spec: specOf('case', 'case:zalman-z3-plus') },
     ])).toEqual([]);
   });
+
+  it('assembles the i9-13900K / RTX 4080 reference build with no incompatibility', () => {
+    expect(problemsFor([
+      { kind: 'cpu', spec: specOf('cpu', 'cpu:intel-core-i9-13900k') },
+      { kind: 'motherboard', spec: specOf('motherboard', 'motherboard:msi-mag-z790-tomahawk-wifi') },
+      { kind: 'memory', spec: specOf('memory', 'memory:corsair-vengeance-64-gb') },
+      { kind: 'gpu', spec: specOf('gpu', 'gpu:geforce-rtx-4080') },
+      { kind: 'psu', spec: specOf('psu', 'psu:corsair-rm1000x-2021') },
+      { kind: 'storage', spec: specOf('storage', 'storage:samsung-980-pro-2000') },
+      { kind: 'cooler', spec: specOf('cooler', 'cooler:noctua-nh-d15-chromax-black') },
+      { kind: 'case', spec: specOf('case', 'case:corsair-7000d-airflow') },
+    ])).toEqual([]);
+  });
   it('keeps every catalogue CPU on the model\'s simulated fields', () => {
     for (const choice of catalogueFor('cpu')) {
       const part = choice.spec as CpuPart;

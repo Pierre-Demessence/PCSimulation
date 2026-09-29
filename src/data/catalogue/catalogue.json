@@ -31,6 +31,23 @@
     }
   },
   {
+    "id": "case:corsair-7000d-airflow",
+    "kind": "case",
+    "name": "Corsair 7000D AIRFLOW",
+    "spec": {
+      "formFactors": [
+        "eatx",
+        "atx",
+        "matx",
+        "itx"
+      ],
+      "id": "corsair-7000d-airflow",
+      "identity": "Corsair 7000D AIRFLOW",
+      "maxCoolerHeightMm": 190,
+      "maxGpuLengthMm": 450
+    }
+  },
+  {
     "id": "case:fractal-design-north",
     "kind": "case",
     "name": "Fractal Design North",
@@ -652,6 +669,56 @@
     }
   },
   {
+    "id": "cpu:intel-core-i9-13900k",
+    "kind": "cpu",
+    "name": "Intel Core i9-13900K",
+    "spec": {
+      "caches": {
+        "l1": {
+          "bytesPerNs": 256,
+          "capacityBytes": 32768,
+          "hitTimeNs": 1,
+          "id": "l1",
+          "maxOutstandingMisses": 192,
+          "role": "tank",
+          "ways": 8
+        },
+        "l2": {
+          "bytesPerNs": 192,
+          "capacityBytes": 524288,
+          "hitTimeNs": 4,
+          "id": "l2",
+          "maxOutstandingMisses": 256,
+          "role": "tank",
+          "ways": 8
+        },
+        "l3": {
+          "bytesPerNs": 128,
+          "capacityBytes": 16777216,
+          "hitTimeNs": 15,
+          "id": "l3",
+          "maxOutstandingMisses": 320,
+          "role": "tank",
+          "ways": 16
+        }
+      },
+      "cpu": {
+        "clockHz": 4000000000,
+        "cores": 24,
+        "id": "intel-core-i9-13900k",
+        "integratedGraphics": true,
+        "memoryGenerations": [
+          "ddr4",
+          "ddr5"
+        ],
+        "role": "work",
+        "serviceTimeNs": 0.25,
+        "socket": "lga1700",
+        "tdpWatts": 125
+      }
+    }
+  },
+  {
     "id": "cpu:intel-core-ultra-5-245k",
     "kind": "cpu",
     "name": "Intel Core Ultra 5 245K",
@@ -765,6 +832,22 @@
     }
   },
   {
+    "id": "gpu:geforce-rtx-4080",
+    "kind": "gpu",
+    "name": "GeForce RTX 4080",
+    "spec": {
+      "boardPowerWatts": 320,
+      "id": "geforce-rtx-4080",
+      "identity": "GeForce RTX 4080",
+      "lengthMm": 304,
+      "pcieLanes": 16,
+      "pcieVersion": 4,
+      "powerConnectors": [
+        "12vhpwr"
+      ]
+    }
+  },
+  {
     "id": "gpu:geforce-rtx-4090",
     "kind": "gpu",
     "name": "GeForce RTX 4090",
@@ -795,6 +878,22 @@
         "pcie-8",
         "pcie-8"
       ]
+    }
+  },
+  {
+    "id": "memory:corsair-vengeance-64-gb",
+    "kind": "memory",
+    "name": "Corsair Vengeance 64 GB",
+    "spec": {
+      "accessOverheadNs": 60,
+      "capacityBytes": 68719476736,
+      "channels": 2,
+      "maxOutstandingMisses": 192,
+      "casLatency": 40,
+      "generation": "ddr5",
+      "id": "corsair-vengeance-64-gb",
+      "mtPerSecond": 5600,
+      "role": "pipe"
     }
   },
   {
@@ -1078,6 +1177,30 @@
     }
   },
   {
+    "id": "motherboard:msi-mag-z790-tomahawk-wifi",
+    "kind": "motherboard",
+    "name": "MSI MAG Z790 TOMAHAWK WIFI",
+    "spec": {
+      "allowedGenerations": [
+        "ddr5"
+      ],
+      "dimmSlots": 4,
+      "formFactor": "atx",
+      "id": "msi-mag-z790-tomahawk-wifi",
+      "m2Slots": 4,
+      "maxChannels": 2,
+      "maxMtPerSecond": 7200,
+      "pcieLanes": 20,
+      "pcieVersion": 5,
+      "powerConnectors": [
+        "atx-24",
+        "eps-8"
+      ],
+      "sataPorts": 6,
+      "socket": "lga1700"
+    }
+  },
+  {
     "id": "psu:corsair-cx650m-2021",
     "kind": "psu",
     "name": "Corsair CX650M (2021)",
@@ -1091,6 +1214,24 @@
       "id": "corsair-cx650m-2021",
       "identity": "Corsair CX650M (2021)",
       "wattage": 650
+    }
+  },
+  {
+    "id": "psu:corsair-rm1000x-2021",
+    "kind": "psu",
+    "name": "Corsair RM1000x (2021)",
+    "spec": {
+      "connectors": [
+        "atx-24",
+        "eps-8",
+        "pcie-8",
+        "pcie-8",
+        "pcie-8",
+        "12vhpwr"
+      ],
+      "id": "corsair-rm1000x-2021",
+      "identity": "Corsair RM1000x (2021)",
+      "wattage": 1000
     }
   },
   {
@@ -1202,6 +1343,18 @@
     }
   },
   {
+    "id": "storage:crucial-p3-plus-4000",
+    "kind": "storage",
+    "name": "Crucial P3 Plus 4 TB",
+    "spec": {
+      "capacityBytes": 4000000000000,
+      "id": "crucial-p3-plus-4000",
+      "identity": "Crucial P3 Plus 4 TB",
+      "interface": "nvme",
+      "pcieLanes": 4
+    }
+  },
+  {
     "id": "storage:samsung-850-evo-250",
     "kind": "storage",
     "name": "Samsung 850 Evo 250 GB",
@@ -1235,6 +1388,30 @@
       "identity": "Samsung 870 Evo 1 TB",
       "interface": "sata",
       "pcieLanes": 0
+    }
+  },
+  {
+    "id": "storage:samsung-980-pro-1000",
+    "kind": "storage",
+    "name": "Samsung 980 Pro 1 TB",
+    "spec": {
+      "capacityBytes": 1000000000000,
+      "id": "samsung-980-pro-1000",
+      "identity": "Samsung 980 Pro 1 TB",
+      "interface": "nvme",
+      "pcieLanes": 4
+    }
+  },
+  {
+    "id": "storage:samsung-980-pro-2000",
+    "kind": "storage",
+    "name": "Samsung 980 Pro 2 TB",
+    "spec": {
+      "capacityBytes": 2000000000000,
+      "id": "samsung-980-pro-2000",
+      "identity": "Samsung 980 Pro 2 TB",
+      "interface": "nvme",
+      "pcieLanes": 4
     }
   },
   {

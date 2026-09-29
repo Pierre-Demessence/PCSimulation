@@ -43,6 +43,7 @@ export const CPU_NAMES: readonly string[] = [
   'Intel Core i5-12400F',
   'Intel Core i5-13600K',
   'Intel Core i7-14700K',
+  'Intel Core i9-13900K',
   'Intel Core Ultra 5 245K',
 ];
 
@@ -141,6 +142,15 @@ export const BOARDS: Record<string, BoardEnrich> = {
     powerConnectors: STANDARD_BOARD_POWER,
     sataPorts: 6,
   },
+  'MSI MAG Z790 TOMAHAWK WIFI': {
+    allowedGenerations: ['ddr5'],
+    m2Slots: 4,
+    maxMtPerSecond: 7200,
+    pcieLanes: 20,
+    pcieVersion: 5,
+    powerConnectors: STANDARD_BOARD_POWER,
+    sataPorts: 6,
+  },
 };
 
 /** A memory kit to curate. `mtPerSecond` disambiguates kits that share a name across speeds. */
@@ -152,6 +162,7 @@ export interface MemoryPick {
 export const MEMORY_PICKS: readonly MemoryPick[] = [
   { mtPerSecond: 2400, name: 'Kingston FURY 16 GB' },
   { mtPerSecond: 3200, name: 'Corsair Vengeance LPX 16 GB' },
+  { mtPerSecond: 5600, name: 'Corsair Vengeance 64 GB' },
   { mtPerSecond: 6000, name: 'G.Skill Flare X5 32 GB' },
   { mtPerSecond: 6400, name: 'G.Skill Trident Z5 RGB 32 GB' },
 ];
@@ -170,6 +181,7 @@ export const GPUS: Record<string, GpuEnrich> = {
   'GeForce RTX 3060 Ti': { boardPowerWatts: 200, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
   'GeForce RTX 4060': { boardPowerWatts: 115, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
   'GeForce RTX 4070': { boardPowerWatts: 200, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8'] },
+  'GeForce RTX 4080': { boardPowerWatts: 320, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['12vhpwr'] },
   'GeForce RTX 4090': { boardPowerWatts: 450, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['12vhpwr'] },
   'Radeon RX 7800 XT': { boardPowerWatts: 263, pcieLanes: 16, pcieVersion: 4, powerConnectors: ['pcie-8', 'pcie-8'] },
 };
@@ -179,6 +191,7 @@ export const PSUS: Record<string, readonly PowerConnector[]> = {
   'Corsair CX650M (2021)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8'],
   'Corsair RM750e (2023)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
   'Corsair RM850e (2023)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
+  'Corsair RM1000x (2021)': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', 'pcie-8', '12vhpwr'],
   'Corsair VS550': ['atx-24', 'eps-8', 'pcie-6', 'pcie-8'],
   'EVGA SuperNOVA 650 GA': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', 'pcie-8'],
   'MSI MAG A750GL PCIE5': ['atx-24', 'eps-8', 'pcie-8', 'pcie-8', '12vhpwr'],
@@ -196,8 +209,11 @@ export interface StoragePick {
 
 export const STORAGE_PICKS: readonly StoragePick[] = [
   { capacityGb: 2000, name: 'Samsung 990 Pro' },
+  { capacityGb: 1000, name: 'Samsung 980 Pro' },
+  { capacityGb: 2000, name: 'Samsung 980 Pro' },
   { capacityGb: 1000, name: 'Western Digital Black SN770' },
   { capacityGb: 1000, name: 'Crucial P3 Plus' },
+  { capacityGb: 4000, name: 'Crucial P3 Plus' },
   { capacityGb: 1000, name: 'Samsung 870 Evo', datasetInterface: 'SATA 6.0 Gb/s' },
   { capacityGb: 1000, name: 'Crucial MX500', datasetInterface: 'SATA 6.0 Gb/s' },
   { capacityGb: 250, datasetInterface: 'SATA 6.0 Gb/s', name: 'Samsung 850 Evo' },
@@ -233,6 +249,7 @@ export interface CaseEnrich {
 export const CASES: Record<string, CaseEnrich> = {
   'Cooler Master MasterBox Q300L': { maxCoolerHeightMm: 159, maxGpuLengthMm: 360 },
   'Corsair 4000D Airflow': { maxCoolerHeightMm: 170, maxGpuLengthMm: 360 },
+  'Corsair 7000D AIRFLOW': { eatx: true, maxCoolerHeightMm: 190, maxGpuLengthMm: 450 },
   'Fractal Design North': { maxCoolerHeightMm: 170, maxGpuLengthMm: 355 },
   'Fractal Design Terra': { maxCoolerHeightMm: 77, maxGpuLengthMm: 322 },
   'Lian Li O11 Dynamic EVO': { eatx: true, maxCoolerHeightMm: 167, maxGpuLengthMm: 420 },
